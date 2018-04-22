@@ -11,11 +11,11 @@ import numpy as np
 import pandas as pd
 import urllib2
 import re
-import sklearn
+import os
+import yaml
 import string as st
 
 import sqlalchemy as sa
-import pymysql
 
 
 def get_made(x,var):
@@ -126,7 +126,7 @@ if os.path.isfile('/sql.yaml'):
         port=data_loaded['BBALL_STATS']['port']
         database=data_loaded['BBALL_STATS']['database']
 
-db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(username,password,endpoint,port,database)
+db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
 engine=sa.create_engine(db_string)
 
 
@@ -142,7 +142,7 @@ left join
 where
     tb."GameID" is Null
     and gs."Status"='Final'
-    --and gs."Season"='2018'
+    and gs."Season"=(select max("Season") from nba.game_summaries)
 order by
     gs."Season"
 

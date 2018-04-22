@@ -5,7 +5,6 @@ Created on Sun Nov 27 21:43:50 2016
 @author: DanLo1108
 """
 
-#Reach out to Ray and Ana for data questions
 
 from bs4 import BeautifulSoup
 import numpy as np
@@ -14,7 +13,8 @@ import urllib2
 import re
 import string as st
 import sqlalchemy as sa
-import pymysql
+import os
+import yaml
 
 
 #Break FG and FT down into integers
@@ -136,7 +136,7 @@ if os.path.isfile('/sql.yaml'):
         port=data_loaded['BBALL_STATS']['port']
         database=data_loaded['BBALL_STATS']['database']
         
-db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(username,password,endpoint,port,database)
+db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
 engine=sa.create_engine(db_string)
 
 
@@ -153,6 +153,7 @@ left join
 where
     p."GameID" is Null
     and gs."Status"='Final'
+    and gs."Season"=(select max("Season") from nba.game_summaries)
 order by
     gs."Season"
 
