@@ -20,7 +20,7 @@ import yaml
 
 
 #Function which takes a date string and appends game summaries
-#to MySQL database
+#to PostGres database
 def append_game_summary(date_str,engine):
     
     #Define URL from ESPN
