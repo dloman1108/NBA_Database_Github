@@ -242,19 +242,15 @@ for date_str in dates:
             print str(round(float(cnt*100.0/len(dates)),2))+'%' 
         continue
     
-  
+ 
 
-#game_summaries=pd.read_sql('select * from nba.game_summaries',engine)
-
-#game_summaries[game_summaries.Date < ]
-
-#This query
+#Drop old rows from games that were scheduled and now completed
 drop_old_rows_query='''
 
 delete from
     nba.game_summaries gs
 where
-    "Status"='Scheduled'
+    "Status" != 'Final'
     and cast("Date" as Date) < (now() - interval '1 day')
     
 '''
