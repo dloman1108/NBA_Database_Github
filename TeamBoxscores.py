@@ -104,8 +104,8 @@ def append_team_boxscores(game_id,engine):
     team_stats_df['Poss']=team_stats_df.apply(lambda x: get_possessions(x),axis=1)
     team_stats_df=team_stats_df.merge(team_stats_df[['OppTeam','Poss']],left_on='Team',right_on='OppTeam',suffixes=('', '_opp')).drop('OppTeam_opp',axis=1)   
     
-    team_stats_df['ORTG']=team_stats_df.PTS/team_stats_df.Poss
-    team_stats_df['DRTG']=team_stats_df.PTS_opp/team_stats_df.Poss
+    team_stats_df['ORTG']=team_stats_df.PTS*100/team_stats_df.Poss
+    team_stats_df['DRTG']=team_stats_df.PTS_opp*100/team_stats_df.Poss*100
     team_stats_df['NetRTG']=(team_stats_df.PTS-team_stats_df.PTS_opp)/team_stats_df.Poss
     
     team_stats_df.to_sql('team_boxscores',con=engine,schema='nba',index=False,if_exists='append')
