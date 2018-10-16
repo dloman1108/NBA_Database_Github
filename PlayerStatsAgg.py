@@ -32,7 +32,7 @@ def get_engine():
 	
 	
 
-def calculate_player_stats(x):
+def calculate_player_stats(engine):
 	player_stats_agg_query='''
 
 	select 
