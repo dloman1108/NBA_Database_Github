@@ -327,67 +327,77 @@ def append_pbp(game_id,engine):
 
 
 #Get credentials stored in sql.yaml file (saved in root directory)
-if os.path.isfile('/sql.yaml'):
-    with open("/sql.yaml", 'r') as stream:
-        data_loaded = yaml.load(stream)
-        
-        #domain=data_loaded['SQL_DEV']['domain']
-        user=data_loaded['BBALL_STATS']['user']
-        password=data_loaded['BBALL_STATS']['password']
-        endpoint=data_loaded['BBALL_STATS']['endpoint']
-        port=data_loaded['BBALL_STATS']['port']
-        database=data_loaded['BBALL_STATS']['database']
-        
-db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
-engine=sa.create_engine(db_string)
-
-
-
-game_id_query='''
-
-select distinct
-    gs."Season"
-    ,gs."GameID"
-from
-    nba.game_summaries gs
-left join
-    nba.play_by_play p on gs."GameID"=p."GameID" 
-where
-    p."GameID" is Null
-    and gs."Status"='Final'
-    and gs."Season"=(select max("Season") from nba.game_summaries)
-order by
-    gs."Season"
-
-'''
-
-game_ids=pd.read_sql(game_id_query,engine)
-
-        
-cnt=0
-bad_gameids=[]
-for game_id in game_ids.GameID.tolist():
-
-    try:
-        append_pbp(game_id,engine)
-        cnt+=1
-        if np.mod(cnt,100)==0:
-            print str(round(float(cnt*100.0/len(game_ids)),2))+'%'
-        
-    except:
-        bad_gameids.append(game_id)
-        cnt+=1
-        if np.mod(cnt,100) == 0:
-            print str(round(float(cnt*100.0/len(game_ids)),2))+'%' 
-        continue
-        
-
-
-  
+def get_engine()
+    if os.path.isfile('/sql.yaml'):
+        with open("/sql.yaml", 'r') as stream:
+            data_loaded = yaml.load(stream)
+            
+            #domain=data_loaded['SQL_DEV']['domain']
+            user=data_loaded['BBALL_STATS']['user']
+            password=data_loaded['BBALL_STATS']['password']
+            endpoint=data_loaded['BBALL_STATS']['endpoint']
+            port=data_loaded['BBALL_STATS']['port']
+            database=data_loaded['BBALL_STATS']['database']
+            
+    db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
+    engine=sa.create_engine(db_string)
     
+    return engine
 
 
 
+def get_gameids(engine):
+    
+    game_id_query='''
+    select distinct
+        gs."Season"
+        ,gs."GameID"
+    from
+        nba.game_summaries gs
+    left join
+        nba.play_by_play p on gs."GameID"=p."GameID" 
+    where
+        p."GameID" is Null
+        and gs."Status"='Final'
+        and gs."Season"=(select max("Season") from nba.game_summaries)
+    order by
+        gs."Season"
+    '''
+    
+    game_ids=pd.read_sql(game_id_query,engine)
+    
+    return game_ids.GameID.tolist()
+
+    
+def update_player_boxscores(engine,game_id_list):   
+    cnt=0
+    bad_gameids=[]
+    for game_id in game_id_list:
+    
+        try:
+            append_pbp(game_id,engine)
+            cnt+=1
+            if np.mod(cnt,100)==0:
+                print str(round(float(cnt*100.0/len(game_ids)),2))+'%'
+            
+        except:
+            bad_gameids.append(game_id)
+            cnt+=1
+            if np.mod(cnt,100) == 0:
+                print str(round(float(cnt*100.0/len(game_ids)),2))+'%' 
+            continue
+            
+ 
+def main():
+    engine=get_engine()
+    game_ids=get_gameids(engine)
+    update_player_boxscores(engine,game_ids)
+    
+    
+    
+if __name__ == "__main__":
+    main()       
+        
 
 
 
