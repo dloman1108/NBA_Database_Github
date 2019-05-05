@@ -187,89 +187,98 @@ def append_game_summary(date_str,engine):
 
 
 #Get credentials stored in sql.yaml file (saved in root directory)
-if os.path.isfile('/sql.yaml'):
-    with open("/sql.yaml", 'r') as stream:
-        data_loaded = yaml.load(stream)
-        
-        #domain=data_loaded['SQL_DEV']['domain']
-        user=data_loaded['BBALL_STATS']['user']
-        password=data_loaded['BBALL_STATS']['password']
-        endpoint=data_loaded['BBALL_STATS']['endpoint']
-        port=data_loaded['BBALL_STATS']['port']
-        database=data_loaded['BBALL_STATS']['database']
-
-
-#Create PostgreSQL engine with SQL Alchemy with credentials. 
-db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
-engine=sa.create_engine(db_string)
+def get_engine()
+    if os.path.isfile('/sql.yaml'):
+        with open("/sql.yaml", 'r') as stream:
+            data_loaded = yaml.load(stream)
+            
+            #domain=data_loaded['SQL_DEV']['domain']
+            user=data_loaded['BBALL_STATS']['user']
+            password=data_loaded['BBALL_STATS']['password']
+            endpoint=data_loaded['BBALL_STATS']['endpoint']
+            port=data_loaded['BBALL_STATS']['port']
+            database=data_loaded['BBALL_STATS']['database']
+            
+    db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
+    engine=sa.create_engine(db_string)
+    
+    return engine
 
 
 #Get max dates of games that were scheduled but not completed
-#**This does not work for postseason
-max_date_query='''
-
-select 
-    max(cast("Date" as date)) max_date
-from 
-    nba.game_summaries
-where
-    "Status"='Final'
-    
-'''
-
-#Iterate through date strings to get game summaries for each date
 from datetime import datetime
 from datetime import date
-start = pd.read_sql(max_date_query,engine).loc[0]['max_date']
-end = date.today()
 
-dates=[str(d)[:4]+str(d)[5:7]+str(d)[8:10] for d in pd.date_range(start, end) if d.month < 7 or d.month >= 10]
+get_dates(engine):
+    max_date_query='''
+
+    select 
+        max(cast("Date" as date)) max_date
+    from 
+        nba.game_summaries
+    where
+        "Status"='Final'
+
+    '''
+
+    #Iterate through date strings to get game summaries for each date
+
+    start = pd.read_sql(max_date_query,engine).loc[0]['max_date']
+    end = date.today()
+
+    dates=[str(d)[:4]+str(d)[5:7]+str(d)[8:10] for d in pd.date_range(start, end) if d.month < 7 or d.month >= 10]
+    return dates
 
 
-#Iterate through list of dates, appending each days games
-cnt=0
-bad_dates=[]
-for date_str in dates: 
-    try:
-        append_game_summary(date_str,engine)
-        cnt+=1
-        if np.mod(cnt,100) == 0:
-            print str(round(float(cnt*100.0/len(dates)),2))+'%' 
-    except:
-        bad_dates.append(date_str)
-        cnt+=1
-        if np.mod(cnt,100) == 0:
-            print str(round(float(cnt*100.0/len(dates)),2))+'%' 
-        continue
+def update_game_summaries(engine,dates): 
+    #Iterate through list of dates, appending each days games
+    cnt=0
+    bad_dates=[]
+    for date_str in dates: 
+        try:
+            append_game_summary(date_str,engine)
+            cnt+=1
+            if np.mod(cnt,100) == 0:
+                print str(round(float(cnt*100.0/len(dates)),2))+'%' 
+        except:
+            bad_dates.append(date_str)
+            cnt+=1
+            if np.mod(cnt,100) == 0:
+                print str(round(float(cnt*100.0/len(dates)),2))+'%' 
+            continue
     
  
+def drop_old_rows(engine):
+    #Drop old rows from games that were scheduled and now completed
+    drop_old_rows_query='''
 
-#Drop old rows from games that were scheduled and now completed
-drop_old_rows_query='''
+    delete from
+        nba.game_summaries gs
+    where
+        "Status" != 'Final'
+        and cast("Date" as Date) < (now() - interval '1 day')
 
-delete from
-    nba.game_summaries gs
-where
-    "Status" != 'Final'
-    and cast("Date" as Date) < (now() - interval '1 day')
-    
-'''
+    '''
 
-engine.execute(drop_old_rows_query)
+    engine.execute(drop_old_rows_query)
+
 
     
+def main():
+    engine=get_engine()
+    dates_list=get_dates(engine)
+    update_game_summaries(engine,dates_list)
+    drop_old_rows(engine)
     
     
-#Drop duplicate rows
+    
+if __name__ == "__main__":
+    main() 
+    
+    
+#Drop duplicate rows - if necessary
 #unique_df=pd.read_sql('select distinct * from nba.game_summaries',engine)
 #unique_df.to_sql('game_summaries',con=engine,schema='nba',index=False,if_exists='replace')
-
-
-
-
-
-
-
 
 
 
