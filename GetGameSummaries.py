@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+f# -*- coding: utf-8 -*-
 """
 Created on Sat Nov 26 12:54:45 2016
 
@@ -209,7 +209,7 @@ def get_engine()
 from datetime import datetime
 from datetime import date
 
-get_dates(engine):
+def get_dates(engine):
     max_date_query='''
 
     select 
