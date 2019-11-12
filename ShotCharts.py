@@ -8,7 +8,7 @@ Created on Sat Dec  3 16:45:38 2016
 from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
-import urllib2
+from urllib.request import urlopen
 import re
 import sklearn
 import string as st
@@ -16,10 +16,8 @@ import matplotlib.pyplot as plt
 import os
 import string as st
 
-#url='http://www.espn.com/nba/playbyplay?gameId=400899617'
-
 import sqlalchemy as sa
-import pymysql
+
 
 
 
@@ -43,19 +41,16 @@ def get_shot_area(x):
     
     
 def get_shot_distance_class(x):
-    if x.ShotDistance < 5:
-        return '<5ft'
-    elif x.ShotDistance >= 5 and x.ShotDistance < 10:
-        return '5-9ft'
-    elif x.ShotDistance >= 10 and x.ShotDistance < 15:
-        return '10-14ft'
-    elif x.ShotDistance >= 15 and x.ShotDistance < 20:
-        return '15-19ft'
-    elif x.ShotDistance >= 20 and x.ShotDistance < 25:
-        return '20-24ft'
-    elif x.ShotDistance >= 50:
-        return '>25ft'
-
+        if x.ShotDistance < 3:
+        return '0-3ft'
+    elif x.ShotDistance >= 3 and x.ShotDistance < 10:
+        return '3-10ft'
+    elif x.ShotDistance >= 10 and x.ShotDistance < 16:
+        return '10-16ft'
+    elif x.ShotDistance >= 16 and x.ShotType == 2:
+        return '16-3pt'
+    elif x.ShotType == 3:
+        return '3pt'
 
 
 
@@ -63,8 +58,7 @@ def append_shot_chart(game_id,engine):
      
     url='http://www.espn.com/nba/playbyplay?gameId='+str(game_id)
 
-    request=urllib2.Request(url)
-    page = urllib2.urlopen(request)
+    page = urlopen(url)
     
     
     content=page.read()
@@ -110,72 +104,102 @@ def append_shot_chart(game_id,engine):
     shot_chart_df['ShotArea']=shot_chart_df.apply(lambda x: get_shot_area(x),axis=1)
     shot_chart_df['ShotDistanceClass']=shot_chart_df.apply(lambda x: get_shot_distance_class(x),axis=1)
     
-    shot_chart_df.to_sql('shot_chart',con=engine,schema='nba',index=False,if_exists='append')
-      
-    #ShotChart.to_csv(filepath+'Shot Chart files/'+date_abbr+'/'+str(gameid)+'_'+st.lower(x.AwayTeamAbbr)+'_'+st.lower(x.HomeTeamAbbr)+'_shotchart.csv',index=False)                                               
+    column_order=['GameID', 'ShotID', 'Class', 'HomeAway', 'Quarter', 'ShooterID', 'Text',
+                  'Left', 'Top', 'XPos', 'YPos', 'ShotDistance', 'ShotAngle', 'ShotType',
+                  'ShotArea', 'ShotDistanceClass']
+    
+    shot_chart_df[column_order].to_sql('shot_chart',
+                         con=engine,
+                         schema='nba',
+                         index=False,
+                         if_exists='append',
+                         dtype={'GameID': sa.types.INTEGER(),
+                                'ShotID': sa.types.INTEGER(),
+                                'Class': sa.types.VARCHAR(length=255),
+                                'HomeAway': sa.types.CHAR(length=4),
+                                'Quarter': sa.types.INTEGER(),
+                                'ShooterID': sa.types.INTEGER(),
+                                'Text': sa.types.VARCHAR(length=255),
+                                'Left': sa.types.FLOAT(),
+                                'Top': sa.types.FLOAT(),
+                                'XPos': sa.types.FLOAT(),
+                                'YPos': sa.types.FLOAT(),
+                                'ShotDistance': sa.types.FLOAT(),
+                                'ShotAngle': sa.types.FLOAT(),
+                                'ShotType': sa.types.INTEGER(),
+                                'ShotArea': sa.types.VARCHAR(length=255),
+                                'ShotDistanceClass': sa.types.VARCHAR(length=255)})      
+    
 
 
 
+def get_engine():
+    #Get credentials stored in sql.yaml file (saved in root directory)
+    if os.path.isfile('/sql.yaml'):
+        with open("/sql.yaml", 'r') as stream:
+            data_loaded = yaml.load(stream)
+            
+            #domain=data_loaded['SQL_DEV']['domain']
+            user=data_loaded['BBALL_STATS']['user']
+            password=data_loaded['BBALL_STATS']['password']
+            endpoint=data_loaded['BBALL_STATS']['endpoint']
+            port=data_loaded['BBALL_STATS']['port']
+            database=data_loaded['BBALL_STATS']['database']
+    
+    db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(username,password,endpoint,port,database)
+    engine=sa.create_engine(db_string)
+    
+    return engine
 
-
-
-#Get credentials stored in sql.yaml file (saved in root directory)
-if os.path.isfile('/sql.yaml'):
-    with open("/sql.yaml", 'r') as stream:
-        data_loaded = yaml.load(stream)
-        
-        #domain=data_loaded['SQL_DEV']['domain']
-        user=data_loaded['BBALL_STATS']['user']
-        password=data_loaded['BBALL_STATS']['password']
-        endpoint=data_loaded['BBALL_STATS']['endpoint']
-        port=data_loaded['BBALL_STATS']['port']
-        database=data_loaded['BBALL_STATS']['database']
-
-db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(username,password,endpoint,port,database)
-engine=sa.create_engine(db_string)
-
-
-game_id_query='''
-
-select distinct
-    gs."Season"
-    ,gs."GameID"
-from
-    nba.game_summaries gs
-left join
-    nba.shot_chart p on cast(gs."GameID" as integer)=cast(p."GameID" as integer) 
-where
-    p."GameID" is Null
-    and gs."Season"=(select max("Season") from nba.game_summaries)
-order by
-    gs."Season"
-
-'''
-
-game_ids=pd.read_sql(game_id_query,engine)
+def get_gameids(engine):
+    game_id_query='''
+    select distinct
+        gs."Season"
+        ,gs."GameID"
+    from
+        nba.game_summaries gs
+    left join
+        nba.shot_chart p on cast(gs."GameID" as integer)=cast(p."GameID" as integer) 
+    where
+        p."GameID" is Null
+        and gs."Season"=(select max("Season") from nba.game_summaries)
+    order by
+        gs."Season"
+    '''
+    
+    game_ids=pd.read_sql(game_id_query,engine)
+    
+    return game_ids.GameID.tolist()
 
             
-            
-cnt=0
-bad_gameids=[]
-for game_id in game_ids.GameID.tolist():
-
-    try:
-        append_shot_chart(game_id,engine)
-        cnt+=1
-        if np.mod(cnt,100)==0:
-            print str(round(float(cnt*100.0/len(game_ids)),2))+'%'
+def update_team_boxscores(engine,game_id_list):
+    cnt=0
+    bad_gameids=[]
+    for game_id in game_id_list:
         
-    except:
-        bad_gameids.append(game_id)
-        cnt+=1
-        if np.mod(cnt,100) == 0:
-            print str(round(float(cnt*100.0/len(game_ids)),2))+'%' 
-        continue
-
-
-
-          
+        if np.mod(cnt,2000)==0:
+            print('CHECK: ',cnt,len(bad_gameids))
+    
+        try:
+            append_shot_chart(game_id,engine)
+            cnt+=1
+            if np.mod(cnt,100)==0:
+                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
             
+        except:
+            bad_gameids.append(game_id)
+            cnt+=1
+            if np.mod(cnt,100) == 0:
+                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
+            continue
         
-           
+        
+def main():
+    engine=get_engine()
+    game_ids=get_dates(engine)
+    update_team_boxscores(engine,game_ids)
+    
+    
+    
+if __name__ == "__main__":
+    main()
