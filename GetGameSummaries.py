@@ -217,7 +217,7 @@ def append_game_summary(date_str,engine):
 
 
 #Get credentials stored in sql.yaml file (saved in root directory)
-def get_engine()
+def get_engine():
     if os.path.isfile('/sql.yaml'):
         with open("/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
