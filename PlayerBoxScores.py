@@ -9,13 +9,13 @@ Created on Sun Nov 27 21:43:50 2016
 from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
-import urllib2
 import re
 import string as st
 import sqlalchemy as sa
 import os
 import yaml
 
+from urllib.request import urlopen
 
 #Break FG and FT down into integers
 def get_made(x,var):
@@ -38,8 +38,7 @@ def append_boxscores(game_id,engine):
     url='http://www.espn.com/nba/boxscore?gameId='+str(game_id)
     
     
-    request=urllib2.Request(url)
-    page = urllib2.urlopen(request)
+    page = urlopen(url)
     
     
     content=page.read()
@@ -70,7 +69,7 @@ def append_boxscores(game_id,engine):
                                  
         for col in player_stats_df:
             try:
-                player_stats_df[col]=map(lambda x: float(x),player_stats_df[col])
+                player_stats_df[col]=list(map(lambda x: float(x),player_stats_df[col]))
             except:
                 continue
             
@@ -83,7 +82,10 @@ def append_boxscores(game_id,engine):
         player_stats_df=player_stats_df.append(dnp_df).reset_index(drop=True)
         
         player_stats_df['Player']=[el.string for el in tables[ind].find_all('span')][0::3][:len(player_stats_df)]
-        player_stats_df['PlayerID']=[el['href'][36:36+el['href'][36:].index('/')] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]      
+	try:
+            player_stats_df['PlayerID']=[el['href'][el['href'].find('id')+3:el['href'].find('id')+3+el['href'][el['href'].find('id')+3:].find('/')] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]
+        except:
+            player_stats_df['PlayerID']=[el['href'][36:] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]          
         #player_stats_df['PlayerAbbr']=[el['href'][36:][el['href'][36:].index('/')+1:] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]      
         
         try:
@@ -119,9 +121,42 @@ def append_boxscores(game_id,engine):
         
         player_stats_df['StarterFLG']=[1.0]*5+[0.0]*(len(player_stats_df)-5)
         
-        player_stats_df[['GameID','Player','PlayerID','Position','Team','StarterFLG','MP','FG','FGM','FGA','3PT','3PTM','3PTA','FT','FTM','FTA',
-                         'OREB','DREB','REB','AST','STL','BLK','TOV','PF','PlusMinus','PTS','DNP_Reason']].to_sql('player_boxscores',con=engine,schema='nba',index=False,if_exists='append')
-    
+        column_order=['GameID','Player','PlayerID','Position','Team','StarterFLG','MP',
+                      'FG','FGM','FGA','3PT','3PTM','3PTA','FT','FTM','FTA','OREB','DREB',
+                      'REB','AST','STL','BLK','TOV','PF','PlusMinus','PTS','DNP_Reason']
+        
+        player_stats_df[column_order].to_sql('player_boxscores',
+                                             con=engine,
+                                             schema='nba',
+                                             index=False,
+                                             if_exists='append',
+                                             dtype={'GameID': sa.types.INTEGER(),
+                                                    'Player': sa.types.VARCHAR(length=255),
+                                                    'PlayerID': sa.types.INTEGER(),
+                                                    'Position': sa.types.CHAR(length=2),
+                                                    'Team': sa.types.VARCHAR(length=255),
+                                                    'StarterFLG': sa.types.BOOLEAN(),
+                                                    'MP': sa.types.INTEGER(),
+                                                    'FG': sa.types.VARCHAR(length=255),
+                                                    'FGM': sa.types.INTEGER(),
+                                                    'FGA': sa.types.INTEGER(),
+                                                    '3PT': sa.types.VARCHAR(length=255),
+                                                    '3PTM': sa.types.INTEGER(),
+                                                    '3PTA': sa.types.INTEGER(),
+                                                    'FT': sa.types.VARCHAR(length=255),
+                                                    'FTM': sa.types.INTEGER(),
+                                                    'FTA': sa.types.INTEGER(),
+                                                    'OREB': sa.types.INTEGER(),
+                                                    'DREB': sa.types.INTEGER(),
+                                                    'REB': sa.types.INTEGER(),
+                                                    'AST': sa.types.INTEGER(),
+                                                    'STL': sa.types.INTEGER(),
+                                                    'BLK': sa.types.INTEGER(),
+                                                    'TOV': sa.types.INTEGER(),
+                                                    'PF': sa.types.INTEGER(),
+                                                    'PlusMinus': sa.types.INTEGER(),
+                                                    'PTS': sa.types.INTEGER(),
+                                                    'DNP_Reason': sa.types.VARCHAR(length=255)})    
 
 
 def get_engine():
@@ -172,19 +207,19 @@ def update_player_boxscores(engine,game_id_list):
     for game_id in game_id_list:
         
         if np.mod(cnt,2000)==0:
-            print 'CHECK: ',cnt,len(bad_gameids)
+            print('CHECK: ',cnt,len(bad_gameids))
     
         try:
             append_boxscores(game_id,engine)
             cnt+=1
             if np.mod(cnt,100)==0:
-                print str(round(float(cnt*100.0/len(game_ids)),2))+'%'
+                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
             
         except:
             bad_gameids.append(game_id)
             cnt+=1
             if np.mod(cnt,100) == 0:
-                print str(round(float(cnt*100.0/len(game_ids)),2))+'%' 
+                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
             continue
         
         
