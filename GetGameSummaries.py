@@ -11,13 +11,12 @@ Created on Sat Nov 26 12:54:45 2016
 from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
-import urllib2
 import re
 import string as st
 import sqlalchemy as sa
 import os
 import yaml
-
+from urllib.request import urlopen
 
 #Function which takes a date string and appends game summaries
 #to PostGres database
@@ -27,8 +26,7 @@ def append_game_summary(date_str,engine):
     url='http://www.espn.com/nba/scoreboard/_/date/'+date_str
     
     #Get URL page 
-    request=urllib2.Request(url)
-    page = urllib2.urlopen(request)
+    page = urlopen(url)
     
     #Get content from URL page
     content=page.read()
@@ -181,8 +179,40 @@ def append_game_summary(date_str,engine):
     scoreboard_results_df=pd.DataFrame(scoreboard_results,columns=col_names)
     
     #Append dataframe results to MySQL database
-    scoreboard_results_df.to_sql('game_summaries',con=engine,schema='nba',index=False,if_exists='append')
-    
+    scoreboard_results_df.to_sql('game_summaries_nuts',
+                                 con=engine,schema='nba',
+                                 index=False,
+                                 if_exists='append',
+                                 dtype={'GameID': sa.types.INTEGER(),
+                                        'Status': sa.types.VARCHAR(length=255),
+                                        'StatusDetail': sa.types.VARCHAR(length=255),
+                                        'Date': sa.types.Date(),
+                                        'Season': sa.types.INTEGER(),
+                                        'HomeTeam': sa.types.VARCHAR(length=255),
+                                        'AwayTeam': sa.types.VARCHAR(length=255),
+                                        'HomeTeamScore': sa.types.INTEGER(),
+                                        'AwayTeamScore': sa.types.INTEGER(),
+                                        'Location': sa.types.VARCHAR(length=255),
+                                        'Venue': sa.types.VARCHAR(length=255),
+                                        'VenueID': sa.types.INTEGER(),
+                                        'Attendance': sa.types.INTEGER(),
+                                        'GameType': sa.types.VARCHAR(length=255),
+                                        'HeadlineLong': sa.types.VARCHAR(length=255),
+                                        'HeadlineShort': sa.types.VARCHAR(length=255),
+                                        'HomeTeamAbbr': sa.types.VARCHAR(length=255),
+                                        'HomeTeamID': sa.types.INTEGER(),
+                                        'HomeTeamWinner': sa.types.BOOLEAN(),
+                                        'AwayTeamAbbr': sa.types.VARCHAR(length=255),
+                                        'AwayTeamID': sa.types.INTEGER(),
+                                        'AwayTeamWinner': sa.types.BOOLEAN(),
+                                        'PlayoffSeriesSummary': sa.types.VARCHAR(length=255),
+                                        'HomeTeamOverallRecord': sa.types.VARCHAR(length=255),
+                                        'HomeTeamHomeRecord': sa.types.VARCHAR(length=255),
+                                        'HomeTeamAwayRecord': sa.types.VARCHAR(length=255),
+                                        'AwayTeamOverallRecord': sa.types.VARCHAR(length=255),
+                                        'AwayTeamHomeRecord': sa.types.VARCHAR(length=255),
+                                        'AwayTeamAwayRecord': sa.types.VARCHAR(length=255)}
+                                 )    
     
 
 
@@ -244,7 +274,7 @@ def update_game_summaries(engine,dates):
             bad_dates.append(date_str)
             cnt+=1
             if np.mod(cnt,100) == 0:
-                print str(round(float(cnt*100.0/len(dates)),2))+'%' 
+                print(str(round(float(cnt*100.0/len(dates)),2))+'%')
             continue
     
  
