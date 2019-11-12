@@ -11,20 +11,13 @@ Created on Sat Nov 26 12:50:53 2016
 from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
-import urllib2
+from urllib.request import urlopen
 import os
 import yaml
 import string as st
 import matplotlib.pyplot as plt
 import os
 import sqlalchemy as sa
-import pymysql
-
-
-
-#filepath=os.getcwd()+'/'
-
-#AllScoreboardSummaries=pd.read_csv('/Users/DanLo1108/Documents/Projects/NBA Game Control/GameSummaries.csv')
 
 
 
@@ -63,7 +56,7 @@ def get_Quarter(x,pbp_df):
     elif 'Start of the 2nd Quarter.' in pbp_df.Play.tolist():
         q1_ind=pbp_df.Play.tolist().index('Start of the 2nd Quarter.')
     else:
-        q1_ind=None
+        q1_ind=-1
         
     if 'End of the 2nd Quarter' in pbp_df.Play.tolist():
         q2_ind=pbp_df.Play.tolist().index('End of the 2nd Quarter')
@@ -74,7 +67,7 @@ def get_Quarter(x,pbp_df):
     elif 'Start of the 3rd Quarter.' in pbp_df.Play.tolist():
         q2_ind=pbp_df.Play.tolist().index('Start of the 3rd Quarter.')
     else:
-        q2_ind=None
+        q2_ind=-1
         
     if 'End of the 3rd Quarter' in pbp_df.Play.tolist():
         q3_ind=pbp_df.Play.tolist().index('End of the 3rd Quarter')
@@ -85,7 +78,7 @@ def get_Quarter(x,pbp_df):
     elif 'Start of the 4th Quarter.' in pbp_df.Play.tolist():
         q3_ind=pbp_df.Play.tolist().index('Start of the 4th Quarter.')
     else:
-        q3_ind=None
+        q3_ind=-1
         
     if 'End of the 4th Quarter' in pbp_df.Play.tolist():
         q4_ind=pbp_df.Play.tolist().index('End of the 4th Quarter')
@@ -96,14 +89,14 @@ def get_Quarter(x,pbp_df):
     elif 'Start of the 2nd Quarter.' in pbp_df.Play.tolist():
         q4_ind=pbp_df.Play.tolist().index('Start of the 2nd Quarter.')
     else:
-        q4_ind=None
+        q4_ind=-1
         
     if 'End of Game' in pbp_df.Play.tolist():
         ge_ind=pbp_df.Play.tolist().index('End of Game')
     elif 'End of the Game' in pbp_df.Play.tolist():
         ge_ind=pbp_df.Play.tolist().index('End of the Game')
     else:
-        ge_ind=None
+        ge_ind=-1
         
     try:
         ot1_ind=pbp_df.Play.tolist().index('End of the 1st  Overtime')
@@ -111,35 +104,35 @@ def get_Quarter(x,pbp_df):
         try:
             ot1_ind=pbp_df.Play.tolist().index('End of the 1st  Overtime.')
         except:
-            ot1_ind=None
+            ot1_ind=-1
     try:
         ot2_ind=pbp_df.Play.tolist().index('End of the 2nd  Overtime')
     except:
         try:
             ot2_ind=pbp_df.Play.tolist().index('End of the 2nd  Overtime.')
         except:
-            ot2_ind=None
+            ot2_ind=-1
     try:
         ot3_ind=pbp_df.Play.tolist().index('End of the 3rd  Overtime')
     except:
         try:
             ot3_ind=pbp_df.Play.tolist().index('End of the 3rd  Overtime.')
         except:
-            ot3_ind=None
+            ot3_ind=-1
     try:
         ot4_ind=pbp_df.Play.tolist().index('End of the 4th  Overtime')
     except:
         try:
             ot4_ind=pbp_df.Play.tolist().index('End of the 4th  Overtime.')
         except:
-            ot4_ind=None
+            ot4_ind=-1
     try:
         ot5_ind=pbp_df.Play.tolist().index('End of the 5th  Overtime')
     except:
         try:
             ot5_ind=pbp_df.Play.tolist().index('End of the 5th  Overtime.')
         except:
-            ot5_ind=None
+            ot5_ind=-1
             
     if x.name <= q1_ind:
         return '1'
@@ -183,7 +176,7 @@ def get_Player(x):
         
 #Classify play type based on text               
 def get_PlayType(x):
-    play=st.lower(x.Play)
+    play=x.Play.lower()
     if 'vs.' in play:
         return 'Jump Ball'
     if 'makes' in play and 'free throw' not in play:
@@ -266,8 +259,7 @@ def append_pbp(game_id,engine):
     
     url='http://www.espn.com/nba/playbyplay?gameId='+str(game_id)
     
-    request=urllib2.Request(url)
-    page = urllib2.urlopen(request)
+    page = urlopen(url)
     
     content=page.read()
     soup=BeautifulSoup(content,'lxml')  
@@ -312,15 +304,34 @@ def append_pbp(game_id,engine):
         pbp_df['SubbedIn']=[]
         pbp_df['SubbedOut']=[]
     
-    #if not os.path.exists(filepath+'Play by Play files/'+date_abbr):
-    #    os.makedirs(filepath+'Play by Play files/'+date_abbr)
+    column_order=['GameID','Play', 'Score', 'Time', 'Team', 'HomeScore',
+                  'AwayScore', 'Quarter', 'Player', 'PlayType', 'Points',
+                  'Assistor', 'StolenBy', 'BlockedBy', 'SubbedIn', 'SubbedOut']
     
-    #PlayByPlay.to_csv(filepath+'Play by Play files/'+date_abbr+'/'+str(gameid)+'_'+st.lower(str(x.AwayTeamAbbr))+'_'+st.lower(str(x.HomeTeamAbbr))+'_playbyplay.csv',index=False)                                               
     
-    pbp_df[['GameID','Play', 'Score', 'Time', 'Team', 'HomeScore',
-            'AwayScore', 'Quarter', 'Player', 'PlayType', 'Points',
-            'Assistor', 'StolenBy', 'BlockedBy', 'SubbedIn', 'SubbedOut']].to_sql('play_by_play',con=engine,schema='nba',index=False,if_exists='append')
-
+    pbp_df[column_order].to_sql('play_by_play',
+                                con=engine,
+                                schema='nba',
+                                index=False,
+                                if_exists='append',
+                                dtype={'GameID': sa.types.INTEGER(),
+                                       'Play': sa.types.VARCHAR(length=255),
+                                       'Score': sa.types.VARCHAR(length=255),
+                                       'Time': sa.types.TIME(),
+                                       'Team': sa.types.VARCHAR(length=255),
+                                       'HomeScore': sa.types.INTEGER(),
+                                       
+                                       'AwayScore': sa.types.INTEGER(),
+                                       'Quarter': sa.types.INTEGER(),
+                                       'Player': sa.types.VARCHAR(length=255),
+                                       'PlayType': sa.types.VARCHAR(length=255),
+                                       'Points': sa.types.INTEGER(),
+                                       
+                                       'Assistor': sa.types.VARCHAR(length=255),
+                                       'StolenBy': sa.types.VARCHAR(length=255),
+                                       'BlockedBy': sa.types.VARCHAR(length=255),
+                                       'SubbedIn': sa.types.VARCHAR(length=255),
+                                       'SubbedOut': sa.types.VARCHAR(length=255)})
            
 #how to handle delayed game?          
     
@@ -369,7 +380,7 @@ def get_gameids(engine):
     return game_ids.GameID.tolist()
 
     
-def update_player_boxscores(engine,game_id_list):   
+def update_play_by_play(engine,game_id_list):   
     cnt=0
     bad_gameids=[]
     for game_id in game_id_list:
@@ -378,31 +389,24 @@ def update_player_boxscores(engine,game_id_list):
             append_pbp(game_id,engine)
             cnt+=1
             if np.mod(cnt,100)==0:
-                print str(round(float(cnt*100.0/len(game_ids)),2))+'%'
+                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
             
         except:
             bad_gameids.append(game_id)
             cnt+=1
             if np.mod(cnt,100) == 0:
-                print str(round(float(cnt*100.0/len(game_ids)),2))+'%' 
+                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
             continue
             
  
 def main():
     engine=get_engine()
     game_ids=get_gameids(engine)
-    update_player_boxscores(engine,game_ids)
+    update_play_by_play(engine,game_ids)
     
     
     
 if __name__ == "__main__":
     main()       
         
-
-
-
-
-
-
-
 
