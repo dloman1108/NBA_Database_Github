@@ -217,7 +217,7 @@ def calculate_team_stats(engine):
                                   'FT_Rate_opp': sa.types.FLOAT(),
                                   'eFG_Pct_opp': sa.types.FLOAT(),
                                   'TOV_Pct_opp': sa.types.FLOAT(),
-                                  'OREB_Pct_opp',: sa.types.FLOAT()
+                                  'OREB_Pct_opp': sa.types.FLOAT(),
                                   'FF_FT_Rate_opp': sa.types.FLOAT()})	
 
 def main():

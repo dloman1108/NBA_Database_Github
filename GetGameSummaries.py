@@ -269,7 +269,7 @@ def update_game_summaries(engine,dates):
             append_game_summary(date_str,engine)
             cnt+=1
             if np.mod(cnt,100) == 0:
-                print str(round(float(cnt*100.0/len(dates)),2))+'%' 
+                print(str(round(float(cnt*100.0/len(dates)),2))+'%') 
         except:
             bad_dates.append(date_str)
             cnt+=1

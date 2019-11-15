@@ -17,7 +17,7 @@ import os
 import string as st
 
 import sqlalchemy as sa
-
+import yaml
 
 
 
@@ -41,7 +41,7 @@ def get_shot_area(x):
     
     
 def get_shot_distance_class(x):
-        if x.ShotDistance < 3:
+    if x.ShotDistance < 3:
         return '0-3ft'
     elif x.ShotDistance >= 3 and x.ShotDistance < 10:
         return '3-10ft'
@@ -146,7 +146,7 @@ def get_engine():
             port=data_loaded['BBALL_STATS']['port']
             database=data_loaded['BBALL_STATS']['database']
     
-    db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(username,password,endpoint,port,database)
+    db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
     engine=sa.create_engine(db_string)
     
     return engine
@@ -171,33 +171,11 @@ def get_gameids(engine):
     
     return game_ids.GameID.tolist()
 
-            
-def update_team_boxscores(engine,game_id_list):
-    cnt=0
-    bad_gameids=[]
-    for game_id in game_id_list:
-        
-        if np.mod(cnt,2000)==0:
-            print('CHECK: ',cnt,len(bad_gameids))
-    
-        try:
-            append_shot_chart(game_id,engine)
-            cnt+=1
-            if np.mod(cnt,100)==0:
-                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
-            
-        except:
-            bad_gameids.append(game_id)
-            cnt+=1
-            if np.mod(cnt,100) == 0:
-                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
-            continue
-        
         
 def main():
     engine=get_engine()
-    game_ids=get_dates(engine)
-    update_team_boxscores(engine,game_ids)
+    game_ids=get_gameids(engine)
+    append_shot_chart(engine,game_ids)
     
     
     
