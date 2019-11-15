@@ -82,7 +82,8 @@ def append_boxscores(game_id,engine):
         player_stats_df=player_stats_df.append(dnp_df).reset_index(drop=True)
         
         player_stats_df['Player']=[el.string for el in tables[ind].find_all('span')][0::3][:len(player_stats_df)]
-	try:
+    
+        try:
             player_stats_df['PlayerID']=[el['href'][el['href'].find('id')+3:el['href'].find('id')+3+el['href'][el['href'].find('id')+3:].find('/')] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]
         except:
             player_stats_df['PlayerID']=[el['href'][36:] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]          
