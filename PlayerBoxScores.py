@@ -49,28 +49,27 @@ def append_boxscores(game_id,engine):
     
     results_head=[re.sub('\t|\n','',el.string) for el in tables[0].find_all('td')]        
     results_head_split=np.array_split(results_head,len(results_head)/5.)
-            
+
     for ind in [1,2]:
         results=[el.string for el in tables[ind].find_all('td')]
-        
+
         try:
             ind_stop=min([i for i in range(len(results)) if pd.notnull(results[i]) and ('DNP-' in results[i] or 'Did not play' in results[i])])-1
         except:
             ind_stop=min([i for i in range(len(results)) if pd.notnull(results[i]) and results[i] == 'TEAM'])
-            
+
         ind_team=min([i for i in range(len(results)) if pd.notnull(results[i]) and results[i] == 'TEAM'])
-            
-        
+
         player_stats_df=pd.DataFrame(np.array_split(results[:ind_stop],ind_stop/15.),
                         columns=['player','mp','fg','fg3','ft',
                                  'oreb','dreb','reb','ast','stl','blk',
                                  'tov','pf','plus_minus','pts'])
-                                 
-	for col in player_stats_df:
-		try:
-                	player_stats_df[col]=list(map(lambda x: float(x),player_stats_df[col]))
-		except:
-                	continue
+
+        for col in player_stats_df:
+            try:
+                player_stats_df[col]=list(map(lambda x: float(x),player_stats_df[col]))
+            except:
+                continue
             
         if ind_stop != ind_team:
             dnp_df=pd.DataFrame(np.array_split(results[ind_stop:ind_team],(ind_team-ind_stop)/2.),
@@ -88,7 +87,7 @@ def append_boxscores(game_id,engine):
             player_stats_df['player_id']=[el['href'][36:] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]          
         #player_stats_df['PlayerAbbr']=[el['href'][36:][el['href'][36:].index('/')+1:] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]      
         
-	 try:
+        try:
             player_stats_df['position']=[el.string for el in tables[ind].find_all('span')][2::3][:len(player_stats_df)]
         except:
             spans=[el.string for el in tables[ind].find_all('span')]
