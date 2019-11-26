@@ -17,7 +17,7 @@ import os
 import string as st
 
 import sqlalchemy as sa
-
+import yaml
 
 
 
@@ -28,28 +28,28 @@ def get_shot_type(x):
         return 2
 
 def get_shot_area(x):
-    if x.ShotDistance <= 4:
+    if x.shot_distance <= 4:
         return 'RA'
-    elif (x.YPos >= 17 and x.YPos <= 33) and x.XPos <= 19:
+    elif (x.y_pos >= 17 and x.y_pos <= 33) and x.x_pos <= 19:
         return 'Paint'
-    elif x.ShotType == 3 and x.XPos <= 14:
+    elif x.shot_type == 3 and x.x_pos <= 14:
         return 'Crnr3'
-    elif x.ShotType == 3 and x.XPos > 14:
+    elif x.shot_type == 3 and x.x_pos > 14:
         return 'AbvBrk3'
     else:
         return 'MidRng'
     
     
 def get_shot_distance_class(x):
-        if x.ShotDistance < 3:
+    if x.shot_distance < 3:
         return '0-3ft'
-    elif x.ShotDistance >= 3 and x.ShotDistance < 10:
+    elif x.shot_distance >= 3 and x.shot_distance < 10:
         return '3-10ft'
-    elif x.ShotDistance >= 10 and x.ShotDistance < 16:
+    elif x.shot_distance >= 10 and x.shot_distance < 16:
         return '10-16ft'
-    elif x.ShotDistance >= 16 and x.ShotType == 2:
+    elif x.shot_distance >= 16 and x.shot_type == 2:
         return '16-3pt'
-    elif x.ShotType == 3:
+    elif x.shot_type == 3:
         return '3pt'
 
 
@@ -96,39 +96,40 @@ def append_shot_chart(game_id,engine):
             continue
         
         
-    shot_chart_df=pd.DataFrame(shot_chart,columns=['GameID','Class','HomeAway','Quarter','ShooterID',
-                                           'Text','ShotID','Left','Top','XPos','YPos','ShotDistance','ShotAngle'])
+    shot_chart_df=pd.DataFrame(shot_chart,columns=['game_id','result','home_away','quarter','shooter_id',
+                                           'text','shot_id','left','top','x_pos','y_pos','shot_distance',
+                                           'shot_angle'])
 
 
-    shot_chart_df['ShotType']=shot_chart_df.apply(lambda x: get_shot_type(x),axis=1)
-    shot_chart_df['ShotArea']=shot_chart_df.apply(lambda x: get_shot_area(x),axis=1)
-    shot_chart_df['ShotDistanceClass']=shot_chart_df.apply(lambda x: get_shot_distance_class(x),axis=1)
+    shot_chart_df['shot_type']=shot_chart_df.apply(lambda x: get_shot_type(x),axis=1)
+    shot_chart_df['shot_area']=shot_chart_df.apply(lambda x: get_shot_area(x),axis=1)
+    shot_chart_df['shot_distance_class']=shot_chart_df.apply(lambda x: get_shot_distance_class(x),axis=1)
     
-    column_order=['GameID', 'ShotID', 'Class', 'HomeAway', 'Quarter', 'ShooterID', 'Text',
-                  'Left', 'Top', 'XPos', 'YPos', 'ShotDistance', 'ShotAngle', 'ShotType',
-                  'ShotArea', 'ShotDistanceClass']
+    column_order=['ShotID', 'game_id', 'result', 'home_away', 'quarter', 'shooter_id', 'text',
+                  'left', 'top', 'x_pos', 'y_pos', 'shot_distance', 'shot_angle', 'shot_type',
+                  'shot_area', 'shot_distance_class']
     
     shot_chart_df[column_order].to_sql('shot_chart',
                          con=engine,
                          schema='nba',
                          index=False,
                          if_exists='append',
-                         dtype={'GameID': sa.types.INTEGER(),
-                                'ShotID': sa.types.INTEGER(),
-                                'Class': sa.types.VARCHAR(length=255),
-                                'HomeAway': sa.types.CHAR(length=4),
-                                'Quarter': sa.types.INTEGER(),
-                                'ShooterID': sa.types.INTEGER(),
-                                'Text': sa.types.VARCHAR(length=255),
-                                'Left': sa.types.FLOAT(),
-                                'Top': sa.types.FLOAT(),
-                                'XPos': sa.types.FLOAT(),
-                                'YPos': sa.types.FLOAT(),
-                                'ShotDistance': sa.types.FLOAT(),
-                                'ShotAngle': sa.types.FLOAT(),
-                                'ShotType': sa.types.INTEGER(),
-                                'ShotArea': sa.types.VARCHAR(length=255),
-                                'ShotDistanceClass': sa.types.VARCHAR(length=255)})      
+                         dtype={'game_id': sa.types.INTEGER(),
+                                'shot_id': sa.types.INTEGER(),
+                                'result': sa.types.VARCHAR(length=255),
+                                'home_away': sa.types.CHAR(length=4),
+                                'quarter': sa.types.INTEGER(),
+                                'shooter_id': sa.types.INTEGER(),
+                                'text': sa.types.VARCHAR(length=255),
+                                'left': sa.types.FLOAT(),
+                                'top': sa.types.FLOAT(),
+                                'x_pos': sa.types.FLOAT(),
+                                'y_pos': sa.types.FLOAT(),
+                                'shot_distance': sa.types.FLOAT(),
+                                'shot_angle': sa.types.FLOAT(),
+                                'shot_type': sa.types.INTEGER(),
+                                'shot_area': sa.types.VARCHAR(length=255),
+                                'shot_distance_class': sa.types.VARCHAR(length=255)})      
     
 
 
@@ -146,7 +147,7 @@ def get_engine():
             port=data_loaded['BBALL_STATS']['port']
             database=data_loaded['BBALL_STATS']['database']
     
-    db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(username,password,endpoint,port,database)
+    db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
     engine=sa.create_engine(db_string)
     
     return engine
@@ -154,50 +155,28 @@ def get_engine():
 def get_gameids(engine):
     game_id_query='''
     select distinct
-        gs."Season"
-        ,gs."GameID"
+        gs.season
+        ,gs.game_id
     from
         nba.game_summaries gs
     left join
-        nba.shot_chart p on cast(gs."GameID" as integer)=cast(p."GameID" as integer) 
+        nba.shot_chart p on gs.game_id=p.game_id
     where
-        p."GameID" is Null
-        and gs."Season"=(select max("Season") from nba.game_summaries)
+        p.game_id is Null
+        and gs.season=(select max(season) from nba.game_summaries)
     order by
-        gs."Season"
+        gs.season
     '''
     
     game_ids=pd.read_sql(game_id_query,engine)
     
-    return game_ids.GameID.tolist()
+    return game_ids.game_id.tolist()
 
-            
-def update_team_boxscores(engine,game_id_list):
-    cnt=0
-    bad_gameids=[]
-    for game_id in game_id_list:
-        
-        if np.mod(cnt,2000)==0:
-            print('CHECK: ',cnt,len(bad_gameids))
-    
-        try:
-            append_shot_chart(game_id,engine)
-            cnt+=1
-            if np.mod(cnt,100)==0:
-                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
-            
-        except:
-            bad_gameids.append(game_id)
-            cnt+=1
-            if np.mod(cnt,100) == 0:
-                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
-            continue
-        
         
 def main():
     engine=get_engine()
-    game_ids=get_dates(engine)
-    update_team_boxscores(engine,game_ids)
+    game_ids=get_gameids(engine)
+    append_shot_chart(engine,game_ids)
     
     
     

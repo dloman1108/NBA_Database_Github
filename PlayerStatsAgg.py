@@ -147,7 +147,7 @@ def calculate_player_stats(engine):
                                 'FG3_Pct': sa.types.FLOAT(),
                                 'FTM': sa.types.FLOAT(),
                                 'FTA': sa.types.FLOAT(),
-                                'FT_Pct',: sa.types.FLOAT()
+                                'FT_Pct': sa.types.FLOAT()
                                 'OREB': sa.types.FLOAT(),
                                 'DREB': sa.types.FLOAT(),
                                 'REB': sa.types.FLOAT(),

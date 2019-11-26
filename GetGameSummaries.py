@@ -1,4 +1,4 @@
-f# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Created on Sat Nov 26 12:54:45 2016
 
@@ -167,57 +167,57 @@ def append_game_summary(date_str,engine):
                                   away_team_overall_record,away_team_home_record,away_team_away_record))
     
     #Define column names
-    col_names=['GameID','Status','StatusDetail','Date','Season','HomeTeam','AwayTeam','HomeTeamScore','AwayTeamScore',
-              'Location','Venue','VenueID','Attendance','GameType',
-             'HeadlineLong','HeadlineShort','HomeTeamAbbr','HomeTeamID',
-             'HomeTeamWinner','AwayTeamAbbr','AwayTeamID',
-             'AwayTeamWinner','PlayoffSeriesSummary',
-             'HomeTeamOverallRecord','HomeTeamHomeRecord','HomeTeamAwayRecord',
-             'AwayTeamOverallRecord','AwayTeamHomeRecord','AwayTeamAwayRecord']  
+    col_names=['game_id','status','status_detail','date','season','home_team','away_team','home_team_score','away_team_score',
+              'location','venue','venue_id','attendance','game_type',
+             'headline_long','headline_short','home_team_abbr','home_team_id',
+             'home_team_winner','away_team_abbr','away_team_id',
+             'away_team_winner','playoff_series_summary',
+             'home_team_overall_record','home_team_home_record','home_team_away_record',
+             'away_team_overall_record','away_team_home_record','away_team_away_record']  
      
     #Save all games for date to DF                           
     scoreboard_results_df=pd.DataFrame(scoreboard_results,columns=col_names)
     
     #Append dataframe results to MySQL database
-    scoreboard_results_df.to_sql('game_summaries_nuts',
+    scoreboard_results_df.to_sql('game_summaries',
                                  con=engine,schema='nba',
                                  index=False,
                                  if_exists='append',
-                                 dtype={'GameID': sa.types.INTEGER(),
-                                        'Status': sa.types.VARCHAR(length=255),
-                                        'StatusDetail': sa.types.VARCHAR(length=255),
-                                        'Date': sa.types.Date(),
-                                        'Season': sa.types.INTEGER(),
-                                        'HomeTeam': sa.types.VARCHAR(length=255),
-                                        'AwayTeam': sa.types.VARCHAR(length=255),
-                                        'HomeTeamScore': sa.types.INTEGER(),
-                                        'AwayTeamScore': sa.types.INTEGER(),
-                                        'Location': sa.types.VARCHAR(length=255),
-                                        'Venue': sa.types.VARCHAR(length=255),
-                                        'VenueID': sa.types.INTEGER(),
-                                        'Attendance': sa.types.INTEGER(),
-                                        'GameType': sa.types.VARCHAR(length=255),
-                                        'HeadlineLong': sa.types.VARCHAR(length=255),
-                                        'HeadlineShort': sa.types.VARCHAR(length=255),
-                                        'HomeTeamAbbr': sa.types.VARCHAR(length=255),
-                                        'HomeTeamID': sa.types.INTEGER(),
-                                        'HomeTeamWinner': sa.types.BOOLEAN(),
-                                        'AwayTeamAbbr': sa.types.VARCHAR(length=255),
-                                        'AwayTeamID': sa.types.INTEGER(),
-                                        'AwayTeamWinner': sa.types.BOOLEAN(),
-                                        'PlayoffSeriesSummary': sa.types.VARCHAR(length=255),
-                                        'HomeTeamOverallRecord': sa.types.VARCHAR(length=255),
-                                        'HomeTeamHomeRecord': sa.types.VARCHAR(length=255),
-                                        'HomeTeamAwayRecord': sa.types.VARCHAR(length=255),
-                                        'AwayTeamOverallRecord': sa.types.VARCHAR(length=255),
-                                        'AwayTeamHomeRecord': sa.types.VARCHAR(length=255),
-                                        'AwayTeamAwayRecord': sa.types.VARCHAR(length=255)}
-                                 )    
+                                 dtype={'game_id': sa.types.INTEGER(),
+                                        'status': sa.types.VARCHAR(length=255),
+                                        'status_detail': sa.types.VARCHAR(length=255),
+                                        'date': sa.types.Date(),
+                                        'season': sa.types.INTEGER(),
+                                        'home_team': sa.types.VARCHAR(length=255),
+                                        'away_team': sa.types.VARCHAR(length=255),
+                                        'home_team_score': sa.types.INTEGER(),
+                                        'away_team_score': sa.types.INTEGER(),
+                                        'location': sa.types.VARCHAR(length=255),
+                                        'venue': sa.types.VARCHAR(length=255),
+                                        'venue_id': sa.types.INTEGER(),
+                                        'attendance': sa.types.INTEGER(),
+                                        'game_type': sa.types.VARCHAR(length=255),
+                                        'headline_long': sa.types.VARCHAR(length=255),
+                                        'headline_short': sa.types.VARCHAR(length=255),
+                                        'home_team_abbr': sa.types.VARCHAR(length=255),
+                                        'home_team_id': sa.types.INTEGER(),
+                                        'home_team_winner': sa.types.BOOLEAN(),
+                                        'away_team_abbr': sa.types.VARCHAR(length=255),
+                                        'away_team_id': sa.types.INTEGER(),
+                                        'away_team_winner': sa.types.BOOLEAN(),
+                                        'playoff_series_summary': sa.types.VARCHAR(length=255),
+                                        'home_team_overall_record': sa.types.VARCHAR(length=255),
+                                        'home_team_home_record': sa.types.VARCHAR(length=255),
+                                        'home_team_away_record': sa.types.VARCHAR(length=255),
+                                        'away_team_overall_record': sa.types.VARCHAR(length=255),
+                                        'away_team_home_record': sa.types.VARCHAR(length=255),
+                                        'away_team_away_record': sa.types.VARCHAR(length=255)}
+                                 )   
     
 
 
 #Get credentials stored in sql.yaml file (saved in root directory)
-def get_engine()
+def get_engine():
     if os.path.isfile('/sql.yaml'):
         with open("/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
@@ -243,11 +243,11 @@ def get_dates(engine):
     max_date_query='''
 
     select 
-        max(cast("Date" as date)) max_date
+        max(date) max_date
     from 
         nba.game_summaries
     where
-        "Status"='Final'
+        status='Final'
 
     '''
 
@@ -269,7 +269,7 @@ def update_game_summaries(engine,dates):
             append_game_summary(date_str,engine)
             cnt+=1
             if np.mod(cnt,100) == 0:
-                print str(round(float(cnt*100.0/len(dates)),2))+'%' 
+                print(str(round(float(cnt*100.0/len(dates)),2))+'%') 
         except:
             bad_dates.append(date_str)
             cnt+=1
@@ -285,8 +285,8 @@ def drop_old_rows(engine):
     delete from
         nba.game_summaries gs
     where
-        "Status" != 'Final'
-        and cast("Date" as Date) < (now() - interval '1 day')
+        status != 'Final'
+        and date < (now() - interval '1 day')
 
     '''
 

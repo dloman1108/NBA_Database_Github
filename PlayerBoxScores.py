@@ -50,7 +50,6 @@ def append_boxscores(game_id,engine):
     results_head=[re.sub('\t|\n','',el.string) for el in tables[0].find_all('td')]        
     results_head_split=np.array_split(results_head,len(results_head)/5.)
             
-    
     for ind in [1,2]:
         results=[el.string for el in tables[ind].find_all('td')]
         
@@ -63,34 +62,34 @@ def append_boxscores(game_id,engine):
             
         
         player_stats_df=pd.DataFrame(np.array_split(results[:ind_stop],ind_stop/15.),
-                        columns=['Player','MP','FG','3PT','FT',
-                                 'OREB','DREB','REB','AST','STL','BLK',
-                                 'TOV','PF','PlusMinus','PTS'])
+                        columns=['player','mp','fg','fg3','ft',
+                                 'oreb','dreb','reb','ast','stl','blk',
+                                 'tov','pf','plus_minus','pts'])
                                  
-        for col in player_stats_df:
-            try:
-                player_stats_df[col]=list(map(lambda x: float(x),player_stats_df[col]))
-            except:
-                continue
+	for col in player_stats_df:
+		try:
+                	player_stats_df[col]=list(map(lambda x: float(x),player_stats_df[col]))
+		except:
+                	continue
             
         if ind_stop != ind_team:
             dnp_df=pd.DataFrame(np.array_split(results[ind_stop:ind_team],(ind_team-ind_stop)/2.),
-                   columns=['Player','DNP_Reason'])
+                   columns=['player','dnp_reason'])
         else:
-            dnp_df=pd.DataFrame(columns=['Player','DNP_Reason'])
+            dnp_df=pd.DataFrame(columns=['player','dnp_reason'])
                 
         player_stats_df=player_stats_df.append(dnp_df).reset_index(drop=True)
         
-        player_stats_df['Player']=[el.string for el in tables[ind].find_all('span')][0::3][:len(player_stats_df)]
+        player_stats_df['player']=[el.string for el in tables[ind].find_all('span')][0::3][:len(player_stats_df)]
     
         try:
-            player_stats_df['PlayerID']=[el['href'][el['href'].find('id')+3:el['href'].find('id')+3+el['href'][el['href'].find('id')+3:].find('/')] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]
+            player_stats_df['player_id']=[el['href'][el['href'].find('id')+3:el['href'].find('id')+3+el['href'][el['href'].find('id')+3:].find('/')] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]
         except:
-            player_stats_df['PlayerID']=[el['href'][36:] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]          
+            player_stats_df['player_id']=[el['href'][36:] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]          
         #player_stats_df['PlayerAbbr']=[el['href'][36:][el['href'][36:].index('/')+1:] for el in tables[ind].find_all('a',href=True)][:len(player_stats_df)]      
         
-        try:
-            player_stats_df['Position']=[el.string for el in tables[ind].find_all('span')][2::3][:len(player_stats_df)]
+	 try:
+            player_stats_df['position']=[el.string for el in tables[ind].find_all('span')][2::3][:len(player_stats_df)]
         except:
             spans=[el.string for el in tables[ind].find_all('span')]
             pos=[]
@@ -101,63 +100,63 @@ def append_boxscores(game_id,engine):
                     pos.append(None)
                 
             if len(pos)==len(player_stats_df):
-                player_stats_df['Position']=pos
+                player_stats_df['position']=pos
             else:
-                player_stats_df['Position']=pos+[None]
+                player_stats_df['position']=pos+[None]
             
         player_stats_df=player_stats_df.replace('-----','0-0').replace('--',0)
         
-        player_stats_df['Team']=results_head_split[ind-1][0]
-        player_stats_df['GameID']=game_id
+        player_stats_df['team']=results_head_split[ind-1][0]
+        player_stats_df['game_id']=game_id
                 
                 
-        player_stats_df['FGM']=player_stats_df.apply(lambda x: get_made(x,'FG'), axis=1)
-        player_stats_df['FGA']=player_stats_df.apply(lambda x: get_attempts(x,'FG'), axis=1)
+        player_stats_df['fgm']=player_stats_df.apply(lambda x: get_made(x,'fg'), axis=1)
+        player_stats_df['fga']=player_stats_df.apply(lambda x: get_attempts(x,'fg'), axis=1)
         
-        player_stats_df['3PTM']=player_stats_df.apply(lambda x: get_made(x,'3PT'), axis=1)
-        player_stats_df['3PTA']=player_stats_df.apply(lambda x: get_attempts(x,'3PT'), axis=1)
+        player_stats_df['fg3m']=player_stats_df.apply(lambda x: get_made(x,'fg3'), axis=1)
+        player_stats_df['fg3a']=player_stats_df.apply(lambda x: get_attempts(x,'fg3'), axis=1)
         
-        player_stats_df['FTM']=player_stats_df.apply(lambda x: get_made(x,'FT'), axis=1)
-        player_stats_df['FTA']=player_stats_df.apply(lambda x: get_attempts(x,'FT'), axis=1)
+        player_stats_df['ftm']=player_stats_df.apply(lambda x: get_made(x,'ft'), axis=1)
+        player_stats_df['fta']=player_stats_df.apply(lambda x: get_attempts(x,'ft'), axis=1)
         
-        player_stats_df['StarterFLG']=[1.0]*5+[0.0]*(len(player_stats_df)-5)
+        player_stats_df['starter_flg']=[1.0]*5+[0.0]*(len(player_stats_df)-5)
         
-        column_order=['GameID','Player','PlayerID','Position','Team','StarterFLG','MP',
-                      'FG','FGM','FGA','3PT','3PTM','3PTA','FT','FTM','FTA','OREB','DREB',
-                      'REB','AST','STL','BLK','TOV','PF','PlusMinus','PTS','DNP_Reason']
+        column_order=['game_id','player','player_id','position','team','starter_flg','mp',
+                      'fg','fgm','fga','fg3','fg3m','fg3a','ft','ftm','fta','oreb','dreb',
+                      'reb','ast','stl','blk','tov','pf','plus_minus','pts','dnp_reason']
         
         player_stats_df[column_order].to_sql('player_boxscores',
                                              con=engine,
                                              schema='nba',
                                              index=False,
                                              if_exists='append',
-                                             dtype={'GameID': sa.types.INTEGER(),
-                                                    'Player': sa.types.VARCHAR(length=255),
-                                                    'PlayerID': sa.types.INTEGER(),
-                                                    'Position': sa.types.CHAR(length=2),
-                                                    'Team': sa.types.VARCHAR(length=255),
-                                                    'StarterFLG': sa.types.BOOLEAN(),
-                                                    'MP': sa.types.INTEGER(),
-                                                    'FG': sa.types.VARCHAR(length=255),
-                                                    'FGM': sa.types.INTEGER(),
-                                                    'FGA': sa.types.INTEGER(),
-                                                    '3PT': sa.types.VARCHAR(length=255),
-                                                    '3PTM': sa.types.INTEGER(),
-                                                    '3PTA': sa.types.INTEGER(),
-                                                    'FT': sa.types.VARCHAR(length=255),
-                                                    'FTM': sa.types.INTEGER(),
-                                                    'FTA': sa.types.INTEGER(),
-                                                    'OREB': sa.types.INTEGER(),
-                                                    'DREB': sa.types.INTEGER(),
-                                                    'REB': sa.types.INTEGER(),
-                                                    'AST': sa.types.INTEGER(),
-                                                    'STL': sa.types.INTEGER(),
-                                                    'BLK': sa.types.INTEGER(),
-                                                    'TOV': sa.types.INTEGER(),
-                                                    'PF': sa.types.INTEGER(),
-                                                    'PlusMinus': sa.types.INTEGER(),
-                                                    'PTS': sa.types.INTEGER(),
-                                                    'DNP_Reason': sa.types.VARCHAR(length=255)})    
+                                             dtype={'game_id': sa.types.INTEGER(),
+                                                    'player': sa.types.VARCHAR(length=255),
+                                                    'player_id': sa.types.INTEGER(),
+                                                    'position': sa.types.CHAR(length=2),
+                                                    'team': sa.types.VARCHAR(length=255),
+                                                    'starter_flg': sa.types.BOOLEAN(),
+                                                    'mp': sa.types.INTEGER(),
+                                                    'fg': sa.types.VARCHAR(length=255),
+                                                    'fgm': sa.types.INTEGER(),
+                                                    'fga': sa.types.INTEGER(),
+                                                    'fg3': sa.types.VARCHAR(length=255),
+                                                    'fg3m': sa.types.INTEGER(),
+                                                    'fg3a': sa.types.INTEGER(),
+                                                    'ft': sa.types.VARCHAR(length=255),
+                                                    'ftm': sa.types.INTEGER(),
+                                                    'fta': sa.types.INTEGER(),
+                                                    'oreb': sa.types.INTEGER(),
+                                                    'dreb': sa.types.INTEGER(),
+                                                    'reb': sa.types.INTEGER(),
+                                                    'ast': sa.types.INTEGER(),
+                                                    'stl': sa.types.INTEGER(),
+                                                    'blk': sa.types.INTEGER(),
+                                                    'tov': sa.types.INTEGER(),
+                                                    'pf': sa.types.INTEGER(),
+                                                    'plus_minus': sa.types.INTEGER(),
+                                                    'pts': sa.types.INTEGER(),
+                                                    'dnp_Reason': sa.types.VARCHAR(length=255)})    
 
 
 def get_engine():
@@ -183,23 +182,23 @@ def get_gameids(engine):
     
     game_id_query='''
     select distinct
-        gs."Season"
-        ,gs."GameID"
+        gs.season
+        ,gs.game_id
     from
         nba.game_summaries gs
     left join
-        nba.player_boxscores p on gs."GameID"=p."GameID" 
+        nba.player_boxscores p on gs.game_id=p.game_id 
     where
-        p."GameID" is Null
-        and gs."Status"='Final'
-        and gs."Season"=(select max("Season") from nba.game_summaries)
+        p.game_id is Null
+        and gs.status='Final'
+        and gs.season=(select max(season) from nba.game_summaries)
     order by
-        gs."Season"
+        gs.season
     '''
     
     game_ids=pd.read_sql(game_id_query,engine)
     
-    return game_ids.GameID.tolist()
+    return game_ids.game_id.tolist()
 
 
 def update_player_boxscores(engine,game_id_list):
