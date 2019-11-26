@@ -22,7 +22,7 @@ import yaml
 
 
 def get_shot_type(x):
-    if 'three point' in x.Text:
+    if 'three point' in x.text:
         return 3
     else:
         return 2
@@ -105,7 +105,7 @@ def append_shot_chart(game_id,engine):
     shot_chart_df['shot_area']=shot_chart_df.apply(lambda x: get_shot_area(x),axis=1)
     shot_chart_df['shot_distance_class']=shot_chart_df.apply(lambda x: get_shot_distance_class(x),axis=1)
     
-    column_order=['ShotID', 'game_id', 'result', 'home_away', 'quarter', 'shooter_id', 'text',
+    column_order=['shot_id', 'game_id', 'result', 'home_away', 'quarter', 'shooter_id', 'text',
                   'left', 'top', 'x_pos', 'y_pos', 'shot_distance', 'shot_angle', 'shot_type',
                   'shot_area', 'shot_distance_class']
     
@@ -114,8 +114,8 @@ def append_shot_chart(game_id,engine):
                          schema='nba',
                          index=False,
                          if_exists='append',
-                         dtype={'game_id': sa.types.INTEGER(),
-                                'shot_id': sa.types.INTEGER(),
+                         dtype={'shot_id': sa.types.VARCHAR(length=255),
+                                'game_id': sa.types.INTEGER(),
                                 'result': sa.types.VARCHAR(length=255),
                                 'home_away': sa.types.CHAR(length=4),
                                 'quarter': sa.types.INTEGER(),

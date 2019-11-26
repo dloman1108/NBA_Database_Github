@@ -103,7 +103,7 @@ def append_team_boxscores(game_id,engine):
     team_stats_df['ftm']=team_stats_df.apply(lambda x: get_made(x,'ft'), axis=1)
     team_stats_df['fta']=team_stats_df.apply(lambda x: get_attempts(x,'ft'), axis=1)
     
-    team_stats_df['opp_team']=team_stats_df.Team.tolist()[::-1]
+    team_stats_df['opp_team']=team_stats_df.team.tolist()[::-1]
     
     team_stats_df=team_stats_df.merge(team_stats_df.drop(['team','game_id'],axis=1),left_on='team',right_on='opp_team',suffixes=('', '_opp')).drop('opp_team_opp',axis=1)   
     
@@ -140,7 +140,7 @@ def append_team_boxscores(game_id,engine):
                                 'fg3m': sa.types.INTEGER(),
                                 'fg3a': sa.types.INTEGER(),
                                 'fg3_pct': sa.types.FLOAT(),
-                                'fg': sa.types.VARCHAR(length=255),
+                                'ft': sa.types.VARCHAR(length=255),
                                 'ftm': sa.types.INTEGER(),
                                 'fta': sa.types.INTEGER(),
                                 'ft_pct': sa.types.FLOAT(),

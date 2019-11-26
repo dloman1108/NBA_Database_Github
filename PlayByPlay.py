@@ -13,7 +13,6 @@ from urllib.request import urlopen
 import os
 import yaml
 import string as st
-import matplotlib.pyplot as plt
 import os
 import sqlalchemy as sa
 
@@ -28,21 +27,21 @@ import sqlalchemy as sa
 
 def get_Team(x,ht,at):
     try:
-        a=x.index(st.lower(ht)+'.')
+        a=x.index(ht.lower()+'.')
         return ht
     except:
         try:
-            a=x.index(st.lower(at))
+            a=x.index(at.lower()+'.')
             return at
         except:
             return None
 
 
 def get_HomeScore(x,ht,at):
-    return int(x.Score[x.Score.index('-')+1:])
+    return int(x.score[x.score.index('-')+1:])
         
 def get_AwayScore(x,ht,at):
-    return int(x.Score[:x.Score.index('-')-1])
+    return int(x.score[:x.score.index('-')-1])
         
 def get_Quarter(x,pbp_df):
     if 'End of the 1st Quarter' in pbp_df.play.tolist():
@@ -275,9 +274,10 @@ def append_pbp(game_id,engine):
     
     if len(pbp_df) > 0:
         try:
-            pbp_df['team']=[get_Team(res['src'],home_team,away_team) for res in soup.find_all('img',attrs={'class','team-logo'})][len(pbp_df)*-1:]
+            pbp_df['team']=[get_Team(res['src'],home_team,away_team) for res in soup.find_all('img',attrs={'class','team-logo'})][len(pbp_df)*-1:] 
         except:
             pbp_df['team']=None
+            
         pbp_df['home_score']=pbp_df.apply(lambda x: get_HomeScore(x,home_team,away_team),axis=1)
         pbp_df['away_score']=pbp_df.apply(lambda x: get_AwayScore(x,home_team,away_team),axis=1)
         pbp_df['quarter']=pbp_df.apply(lambda x: get_Quarter(x,pbp_df),axis=1)
@@ -307,7 +307,6 @@ def append_pbp(game_id,engine):
                'quarter','player','play_type','points','assistor','stolen_by',
                'blocked_by','subbed_in','subbed_out']
     
-    
     pbp_df[column_order].to_sql('play_by_play',
                                 con=engine,
                                 schema='nba',
@@ -316,8 +315,8 @@ def append_pbp(game_id,engine):
                                 dtype={'game_id': sa.types.INTEGER(),
                                        'play': sa.types.VARCHAR(length=255),
                                        'score': sa.types.VARCHAR(length=255),
-                                       'team': sa.types.TIME(),
-                                       'Team': sa.types.VARCHAR(length=255),
+                                       'time': sa.types.VARCHAR(length=255),
+                                       'team': sa.types.VARCHAR(length=255),
                                        'home_score': sa.types.INTEGER(),
                                        
                                        'away_score': sa.types.INTEGER(),
@@ -331,10 +330,7 @@ def append_pbp(game_id,engine):
                                        'blocked_by': sa.types.VARCHAR(length=255),
                                        'subbed_in': sa.types.VARCHAR(length=255),
                                        'subbed_out': sa.types.VARCHAR(length=255)})
-           
-#how to handle delayed game?          
-    
-
+                 
 
 #Get credentials stored in sql.yaml file (saved in root directory)
 def get_engine():
