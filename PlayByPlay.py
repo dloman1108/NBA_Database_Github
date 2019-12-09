@@ -365,7 +365,7 @@ def get_gameids(engine):
     where
         p.game_id is Null
         and gs.status='Final'
-        --and gs.season=(select max(season) from nba.game_summaries)
+        and gs.season=(select max(season) from nba.game_summaries)
     order by
         gs.season
     '''

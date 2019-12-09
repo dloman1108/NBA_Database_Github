@@ -163,7 +163,7 @@ def get_gameids(engine):
         nba.shot_chart p on gs.game_id=p.game_id
     where
         p.game_id is Null
-        --and gs.season=(select max(season) from nba.game_summaries)
+        and gs.season=(select max(season) from nba.game_summaries)
     order by
         gs.season
     '''
