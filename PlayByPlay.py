@@ -320,7 +320,7 @@ def append_pbp(game_id,engine):
                                        'home_score': sa.types.INTEGER(),
                                        
                                        'away_score': sa.types.INTEGER(),
-                                       'quarter': sa.types.INTEGER(),
+                                       'quarter': sa.types.VARCHAR(length=255),
                                        'player': sa.types.VARCHAR(length=255),
                                        'play_type': sa.types.VARCHAR(length=255),
                                        'points': sa.types.INTEGER(),
@@ -365,7 +365,7 @@ def get_gameids(engine):
     where
         p.game_id is Null
         and gs.status='Final'
-        and gs.season=(select max(season) from nba.game_summaries)
+        --and gs.season=(select max(season) from nba.game_summaries)
     order by
         gs.season
     '''
@@ -379,18 +379,25 @@ def update_play_by_play(engine,game_id_list):
     cnt=0
     bad_gameids=[]
     for game_id in game_id_list:
+        
+        if np.mod(cnt,2000)==0:
+            if cnt == 0:
+                print('Total GameIDs: ',len(game_id_list))
+            else:
+                print('CHECK: ',cnt,len(bad_gameids))
     
         try:
             append_pbp(game_id,engine)
             cnt+=1
             if np.mod(cnt,100)==0:
-                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
+                print(str(round(float(cnt*100.0/len(game_id_list)),2))+'%')
             
         except:
             bad_gameids.append(game_id)
             cnt+=1
             if np.mod(cnt,100) == 0:
-                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
+                print(str(round(float(cnt*100.0/len(game_id_list)),2))+'%')
+                
             continue
             
  

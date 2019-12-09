@@ -42,7 +42,7 @@ def append_team_boxscores(game_id,engine):
     
     #gameId='400899617'
     
-    url='http://www.espn.com/nba/matchup?gameId='+game_id
+    url='http://www.espn.com/nba/matchup?gameId='+str(game_id)
     
     page = urlopen(url)
     
@@ -242,19 +242,22 @@ def update_team_boxscores(engine,game_id_list):
     for game_id in game_id_list:
         
         if np.mod(cnt,2000)==0:
-            print('CHECK: ',cnt,len(bad_gameids))
+            if cnt == 0:
+                print('Total GameIDs: ',len(game_id_list))
+            else:
+                print('CHECK: ',cnt,len(bad_gameids))
     
         try:
             append_team_boxscores(game_id,engine)
             cnt+=1
             if np.mod(cnt,100)==0:
-                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
+                print(str(round(float(cnt*100.0/len(game_id_list)),2))+'%')
             
         except:
             bad_gameids.append(game_id)
             cnt+=1
             if np.mod(cnt,100) == 0:
-                print(str(round(float(cnt*100.0/len(game_ids)),2))+'%')
+                print(str(round(float(cnt*100.0/len(game_id_list)),2))+'%')
             continue
         
         
