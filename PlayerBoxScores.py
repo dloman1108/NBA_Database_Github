@@ -10,7 +10,6 @@ from bs4 import BeautifulSoup
 import numpy as np
 import pandas as pd
 import re
-import string as st
 import sqlalchemy as sa
 import os
 import yaml
@@ -155,7 +154,7 @@ def append_boxscores(game_id,engine):
                                                     'pf': sa.types.INTEGER(),
                                                     'plus_minus': sa.types.INTEGER(),
                                                     'pts': sa.types.INTEGER(),
-                                                    'dnp_Reason': sa.types.VARCHAR(length=255)})    
+                                                    'dnp_reason': sa.types.VARCHAR(length=255)})    
 
 
 def get_engine():
@@ -207,7 +206,7 @@ def update_player_boxscores(engine,game_id_list):
         
         if np.mod(cnt,2000)==0:
             if cnt == 0:
-                print('Total GameIDs: ',len(game_id_list))
+                print('Total Games: ',len(game_id_list))
             else:
                 print('CHECK: ',cnt,len(bad_gameids))
     

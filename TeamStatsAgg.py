@@ -17,14 +17,14 @@ def get_engine():
 	#Get credentials stored in sql.yaml file (saved in root directory)
 	if os.path.isfile('/sql.yaml'):
 	    with open("/sql.yaml", 'r') as stream:
-		data_loaded = yaml.load(stream)
-
-		#domain=data_loaded['SQL_DEV']['domain']
-		user=data_loaded['BBALL_STATS']['user']
-		password=data_loaded['BBALL_STATS']['password']
-		endpoint=data_loaded['BBALL_STATS']['endpoint']
-		port=data_loaded['BBALL_STATS']['port']
-		database=data_loaded['BBALL_STATS']['database']
+    		data_loaded = yaml.load(stream)
+    
+    		#domain=data_loaded['SQL_DEV']['domain']
+    		user=data_loaded['BBALL_STATS']['user']
+    		password=data_loaded['BBALL_STATS']['password']
+    		endpoint=data_loaded['BBALL_STATS']['endpoint']
+    		port=data_loaded['BBALL_STATS']['port']
+    		database=data_loaded['BBALL_STATS']['database']
 
 	db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
 	engine=sa.create_engine(db_string)
@@ -36,109 +36,110 @@ def calculate_team_stats(engine):
 	team_stats_agg_query='''
 	with possessions as (
 		select
-			tb."Team"
-			,gs."Season"
-			,gs."GameType"
-			,.5*((sum(tb."FGA")+0.4*sum(tb."FTA")-1.07*(sum(tb."OREB")*1.0/(sum(tb."OREB")+sum(tb."DREB")))*(sum(tb."FGA")-sum(tb."FGM"))+sum(tb."TOV"))+(sum(tb."FGA_opp")+0.4*sum(tb."FTA_opp")-1.07*(sum(tb."OREB_opp")*1.0/(sum(tb."OREB_opp")+sum(tb."DREB_opp"))) * (sum(tb."FGA_opp")-sum(tb."FGM_opp"))+sum(tb."TOV_opp"))) "Poss"
+			tb.team
+			,gs.season
+			,gs.game_type
+			,.5*((sum(tb.fga)+0.4*sum(tb.fta)-1.07*(sum(tb.oreb)*1.0/(sum(tb.oreb)+sum(tb.dreb)))*(sum(tb.fga)-sum(tb.fgm))+sum(tb.tov))+(sum(tb.fga_opp)+0.4*sum(tb.fta_opp)-1.07*(sum(tb.oreb_opp)*1.0/(sum(tb.oreb_opp)+sum(tb.dreb_opp))) * (sum(tb.fga_opp)-sum(tb.fgm_opp))+sum(tb.tov_opp))) poss
 		from
 			nba.team_boxscores tb
 		join
-			nba.game_summaries gs on tb."GameID"=gs."GameID" and gs."Status"='Final'
+			nba.game_summaries gs on tb.game_id=gs.game_id and gs.status='Final'
 		group by
-			tb."Team"
-			,gs."Season"
-			,gs."GameType"
+			tb.team
+			,gs.season
+			,gs.game_type
 	)
 
 	select
-		tb."Team"
+		tb.team
 		,max(case 
-			when tb."Team"=gs."HomeTeamAbbr" then gs."HomeTeamID" 
-			when tb."Team"=gs."AwayTeamAbbr" then gs."AwayTeamID" else Null end) "TeamID"
-		,gs."Season"
-		,gs."GameType"
-		,count(*) "GP"
-		,sum(case when tb."PTS" > tb."PTS_opp" then 1 else 0 end) "Wins"
-		,sum(case when tb."PTS" < tb."PTS_opp" then 1 else 0 end) "Losses"
-		,avg(case when tb."PTS" > tb."PTS_opp" then 1.0 else 0 end) "WinPct"
-		,avg(tb."FGM"*1.0) "FGM"
-		,avg(tb."FGA"*1.0) "FGA"
-		,sum(tb."FGM")*1.0/sum(tb."FGA") "FG_Pct"
-		,avg(tb."3PTM"*1.0) "FG3M"
-		,avg(tb."3PTA"*1.0) "FG3A"
-		,sum(tb."3PTM")*1.0/sum(tb."3PTA") "FG3_Pct"
-		,avg(tb."FTM"*1.0) "FTM"
-		,avg(tb."FTA"*1.0) "FTA"
-		,sum(tb."FTM")*1.0/sum(tb."FTA") "FT_Pct"
-		,avg(tb."PTS") "PTS"
-		,avg(tb."OREB")+avg(tb."DREB") "REB"
-		,avg(tb."OREB") "OREB"
-		,avg(tb."DREB") "DREB"
-		,avg(tb."AST") "AST"
-		,avg(tb."STL") "STL"
-		,avg(tb."BLK") "BLK"
-		,avg(tb."TOV") "TOV"
-		,avg(tb."PtsOffTOV") "PtsOffTOV"
-		,avg(tb."FstBrkPts") "FstBrkPts"
-		,avg(tb."PtsInPnt") "PtsInPnt"
-		,avg(tb."PF") "PF"
-		,avg(tb."TechF") "TechF"
-		,avg(tb."FlagF") "FlagF"
-		,avg(tb."FGM_opp"*1.0) "FGM_opp"
-		,avg(tb."FGA_opp"*1.0) "FGA_opp"
-		,sum(tb."FGM_opp")*1.0/sum(tb."FGA_opp") "FG_Pct_opp"
-		,avg(tb."3PTM_opp"*1.0) "FG3M_opp"
-		,avg(tb."3PTA_opp"*1.0) "FG3A_opp"
-		,sum(tb."3PTM_opp")*1.0/sum(tb."3PTA_opp") "FG3_Pct_opp"
-		,avg(tb."FTM_opp"*1.0) "FTM_opp"
-		,avg(tb."FTA_opp"*1.0) "FTA_opp"
-		,sum(tb."FTM_opp")*1.0/sum(tb."FTA_opp") "FT_Pct_opp"
-		,avg(tb."PTS_opp") "PTS_opp"
-		,avg(tb."OREB_opp")+avg(tb."DREB_opp") "REB_opp"
-		,avg(tb."OREB_opp") "OREB_opp"
-		,avg(tb."DREB_opp") "DREB_opp"
-		,avg(tb."AST_opp") "AST_opp"
-		,avg(tb."STL_opp") "STL_opp"
-		,avg(tb."BLK_opp") "BLK_opp"
-		,avg(tb."TOV_opp") "TOV_opp"
-		,avg(tb."PtsOffTOV_opp") "PtsOffTOV_opp"
-		,avg(tb."FstBrkPts_opp") "FstBrkPts_opp"
-		,avg(tb."PtsInPnt_opp") "PtsInPnt_opp"
-		,avg("PF_opp") "PF_opp"
-		,avg("TechF_opp") "TechF_opp"
-		,avg("FlagF_opp") "FlagF_opp"
+			when tb.team=gs.home_team_abbr then gs.home_team_id 
+			when tb.team=gs.away_team_abbr then gs.away_team_id else Null end) team_id
+		,gs.season
+		,gs.game_type
+		,count(*) gp
+		,sum(case when tb.pts > tb.pts_opp then 1 else 0 end) wins
+		,sum(case when tb.pts < tb.pts_opp then 1 else 0 end) losses
+		,avg(case when tb.pts > tb.pts_opp then 1.0 else 0 end) win_pct
+		,avg(tb.fgm*1.0) fgm
+		,avg(tb.fga*1.0) fga
+		,sum(tb.fgm)*1.0/sum(tb.fga) fg_pct
+		,avg(tb.fg3m*1.0) fg3m
+		,avg(tb.fg3a*1.0) fg3a
+		,sum(tb.fg3m)*1.0/sum(tb.fg3a) fg3_pct
+		,avg(tb.ftm*1.0) ftm
+		,avg(tb.fta*1.0) fta
+		,sum(tb.ftm)*1.0/sum(tb.fta) ft_pct
+		,avg(tb.pts) pts
+		,avg(tb.oreb)+avg(tb.dreb) reb
+		,avg(tb.oreb) oreb
+		,avg(tb.dreb) dreb
+		,avg(tb.ast) ast
+		,avg(tb.stl) stl
+		,avg(tb.blk) blk
+		,avg(tb.tov) tov
+		,avg(tb.pts_off_tov) pts_off_tov
+		,avg(tb.fst_brk_pts) fst_brk_pts
+		,avg(tb.pts_in_pnt) pts_in_pnt
+		,avg(tb.pf) pf
+		,avg(tb.tech_fl) tech_fl
+		,avg(tb.flag_fl) flag_fl
+		,avg(tb.fgm_opp*1.0) fgm_opp
+		,avg(tb.fga_opp*1.0) fga_opp
+		,sum(tb.fgm_opp)*1.0/sum(tb.fga_opp) fg_pct_opp
+		,avg(tb.fg3m_opp*1.0) fg3m_opp
+		,avg(tb.fg3a_opp*1.0) fg3a_opp
+		,sum(tb.fg3m_opp)*1.0/sum(tb.fg3a_opp) fg3_pct_opp
+		,avg(tb.ftm_opp*1.0) ftm_opp
+		,avg(tb.fta_opp*1.0) fta_opp
+		,sum(tb.ftm_opp)*1.0/sum(tb.fta_opp) ft_pct_opp
+		,avg(tb.pts_opp) pts_opp
+		,avg(tb.oreb_opp)+avg(tb.dreb_opp) reb_opp
+		,avg(tb.oreb_opp) oreb_opp
+		,avg(tb.dreb_opp) dreb_opp
+		,avg(tb.ast_opp) ast_opp
+		,avg(tb.stl_opp) stl_opp
+		,avg(tb.blk_opp) blk_opp
+		,avg(tb.tov_opp) tov_opp
+		,avg(tb.pts_off_tov_opp) pts_off_tov_opp
+		,avg(tb.fst_brk_pts_opp) fst_brk_pts_opp
+		,avg(tb.pts_in_pnt_opp) pts_in_pnt_opp
+		,avg(pf_opp) pf_opp
+		,avg(tech_fl_opp) tech_fl_opp
+		,avg(flag_fl_opp) flag_fl_opp
 		--Get 4 factors + ratings
-		,sum(pb."MP") "MP"
-		,p."Poss"
-		,48*((p."Poss"*2)/(2*(sum(pb."MP")/5.0))) "Pace"
-		,sum(tb."PTS")/p."Poss"*100 "OffRTG"
-		,sum(tb."PTS_opp")*100.0/p."Poss" "DefRTG"
-		,(sum(tb."PTS")-sum(tb."PTS_opp"))/p."Poss"*100 "NetRTG"
-		,sum(tb."3PTA")*1.0/sum(tb."FGA") "FG3_Rate"
-		,sum(tb."FTA")*1.0/sum(tb."FGA") "FT_Rate"
-		,(sum(tb."FGM")+.5*sum(tb."3PTM"))/sum(tb."FGA") "eFG_Pct"
-		,sum(tb."TOV")/(sum(tb."FGA")+.44*sum(tb."FTA")+sum(tb."TOV")) "TOV_Pct"
-		,sum(tb."OREB")*1.0/(sum(tb."OREB")+sum(tb."DREB_opp")) "OREB_Pct"
-		,sum(tb."FTM")*1.0/sum(tb."FGA") "FF_FT_Rate"
-		,sum(tb."3PTA_opp")*1.0/sum(tb."FGA_opp") "FG3_Rate_opp"
-		,sum(tb."FTA_opp")*1.0/sum(tb."FGA_opp") "FT_Rate_opp"
-		,(sum(tb."FGM_opp")+.5*sum(tb."3PTM_opp"))/sum(tb."FGA_opp") "eFG_Pct_opp"
-		,sum(tb."TOV_opp")/(sum(tb."FGA_opp")+.44*sum(tb."FTA_opp")+sum(tb."TOV_opp")) "TOV_Pct_opp"
-		,sum(tb."OREB_opp")*1.0/(sum(tb."OREB_opp")+sum(tb."DREB")) "OREB_Pct_opp"
-		,sum(tb."FTM_opp")*1.0/sum(tb."FGA_opp") "FF_FT_Rate_opp"
+		,sum(pb.mp) mp
+		,p.poss
+		,48*((p.poss*2)/(2*(sum(pb.mp)/5.0))) pace
+		,sum(tb.pts)/p.poss*100 off_rtg
+		,sum(tb.pts_opp)*100.0/p.poss def_fts
+		,(sum(tb.pts)-sum(tb.pts_opp))/p.poss*100 net_rtg
+		,sum(tb.fg3a)*1.0/sum(tb.fga) fg3_rate
+		,sum(tb.fta)*1.0/sum(tb.fga) ft_rate
+		,(sum(tb.fgm)+.5*sum(tb.fg3m))/sum(tb.fga) efg_pct
+		,sum(tb.tov)/(sum(tb.fga)+.44*sum(tb.fta)+sum(tb.tov)) tov_pct
+		,sum(tb.oreb)*1.0/(sum(tb.oreb)+sum(tb.dreb_opp)) oreb_pct
+		,sum(tb.ftm)*1.0/sum(tb.fga) ff_ft_rate
+		,sum(tb.fg3a_opp)*1.0/sum(tb.fga_opp) fg3_rate_opp
+		,sum(tb.fta_opp)*1.0/sum(tb.fga_opp) ft_rate_opp
+		,(sum(tb.fgm_opp)+.5*sum(tb.fg3m_opp))/sum(tb.fga_opp) efg_pct_opp
+		,sum(tb.tov_opp)/(sum(tb.fga_opp)+.44*sum(tb.fta_opp)+sum(tb.tov_opp)) tov_pct_opp
+		,sum(tb.oreb_opp)*1.0/(sum(tb.oreb_opp)+sum(tb.dreb)) oreb_pct_opp
+		,sum(tb.ftm_opp)*1.0/sum(tb.fga_opp) ff_ft_rate_opp
+		,now() last_update_dts
 	from
 		nba.team_boxscores tb
 	join
-		nba.game_summaries gs on tb."GameID"=gs."GameID" and gs."Status"='Final'
+		nba.game_summaries gs on tb.game_id=gs.game_id and gs.status='Final'
 	left join
-		(select "GameID","Team",sum(cast("MP" as float)) "MP" from nba.player_boxscores group by "GameID","Team") pb on tb."GameID"=pb."GameID" and tb."Team"=pb."Team"
+		(select game_id,team,sum(cast(mp as float)) mp from nba.player_boxscores group by game_id,team) pb on tb.game_id=pb.game_id and tb.team=pb.team
 	join
-		possessions p on tb."Team"=p."Team" and gs."Season"=p."Season" and gs."GameType"=p."GameType"
+		possessions p on tb.team=p.team and gs.season=p.season and gs.game_type=p.game_type
 	group by
-		tb."Team"
-		,gs."Season"
-		,gs."GameType"
-		,p."Poss"
+		tb.team
+		,gs.season
+		,gs.game_type
+		,p.poss
 	'''
 
 	team_stats_agg=pd.read_sql(team_stats_agg_query,engine)
@@ -147,78 +148,79 @@ def calculate_team_stats(engine):
 			   con=engine,schema='nba',
                            index=False,
                            if_exists='replace',
-                           dtype={'Team': sa.types.VARCHAR(length=255),
-                                  'TeamID': sa.types.INTEGER(),
-                                  'Season': sa.types.INTEGER(),
-                                  'GameType': sa.types.VARCHAR(length=255),
-                                  'GP': sa.types.INTEGER(),
-                                  'Wins': sa.types.INTEGER(),
-                                  'Losses': sa.types.INTEGER(),
-                                  'WinPct': sa.types.FLOAT(),
-                                  'FGM': sa.types.FLOAT(),
-                                  'FGA': sa.types.FLOAT(),
-                                  'FG_Pct': sa.types.FLOAT(),
-                                  'FG3M': sa.types.FLOAT(),
-                                  'FG3A': sa.types.FLOAT(),
-                                  'FG3_Pct': sa.types.FLOAT(),
-                                  'FTM': sa.types.FLOAT(),
-                                  'FTA': sa.types.FLOAT(),
-                                  'FT_Pct': sa.types.FLOAT(),
-                                  'PTS': sa.types.FLOAT(),
-                                  'REB': sa.types.FLOAT(),
-                                  'OREB': sa.types.FLOAT(),
-                                  'DREB': sa.types.FLOAT(),
-                                  'AST': sa.types.FLOAT(),
-                                  'STL': sa.types.FLOAT(),
-                                  'BLK': sa.types.FLOAT(),
-                                  'TOV': sa.types.FLOAT(),
-                                  'PtsOffTOV': sa.types.FLOAT(),
-                                  'FstBrkPts': sa.types.FLOAT(),
-                                  'PtsInPnt': sa.types.FLOAT(),
-                                  'PF': sa.types.FLOAT(),
-                                  'TechF': sa.types.FLOAT(),
-                                  'FlagF': sa.types.FLOAT(),
-                                  'FGM_opp': sa.types.FLOAT(),
-                                  'FGA_opp': sa.types.FLOAT(),
-                                  'FG_Pct_opp': sa.types.FLOAT(),
-                                  'FG3M_opp': sa.types.FLOAT(),
-                                  'FG3A_opp': sa.types.FLOAT(),
-                                  'FG3_Pct_opp': sa.types.FLOAT(),
-                                  'FTM_opp': sa.types.FLOAT(),
-                                  'FTA_opp': sa.types.FLOAT(),
-                                  'FT_Pct_opp': sa.types.FLOAT(),
-                                  'PTS_opp': sa.types.FLOAT(),
-                                  'REB_opp': sa.types.FLOAT(),
-                                  'OREB_opp': sa.types.FLOAT(),
-                                  'DREB_opp': sa.types.FLOAT(),
-                                  'AST_opp': sa.types.FLOAT(),
-                                  'STL_opp': sa.types.FLOAT(),
-                                  'BLK_opp': sa.types.FLOAT(),
-                                  'TOV_opp': sa.types.FLOAT(),
-                                  'PtsOffTOV_opp': sa.types.FLOAT(),
-                                  'FstBrkPts_opp': sa.types.FLOAT(),
-                                  'PtsInPnt_opp': sa.types.FLOAT(),
-                                  'PF_opp': sa.types.FLOAT(),
-                                  'TechF_opp': sa.types.FLOAT(),
-                                  'FlagF_opp': sa.types.FLOAT(),
-                                  'MP': sa.types.FLOAT(),
-                                  'Poss': sa.types.FLOAT(),
-                                  'Pace': sa.types.FLOAT(),
-                                  'OffRTG': sa.types.FLOAT(),
-                                  'DefRTG': sa.types.FLOAT(),
-                                  'NetRTG': sa.types.FLOAT(),
-                                  'FG3_Rate': sa.types.FLOAT(),
-                                  'FT_Rate': sa.types.FLOAT(),
-                                  'eFG_Pct': sa.types.FLOAT(),
-                                  'TOV_Pct': sa.types.FLOAT(),
-                                  'OREB_Pct': sa.types.FLOAT(),
-                                  'FF_FT_Rate': sa.types.FLOAT(),
-                                  'FG3_Rate_opp': sa.types.FLOAT(),
-                                  'FT_Rate_opp': sa.types.FLOAT(),
-                                  'eFG_Pct_opp': sa.types.FLOAT(),
-                                  'TOV_Pct_opp': sa.types.FLOAT(),
-                                  'OREB_Pct_opp': sa.types.FLOAT(),
-                                  'FF_FT_Rate_opp': sa.types.FLOAT()})	
+                           dtype={'team': sa.types.VARCHAR(length=255),
+                                  'team_id': sa.types.INTEGER(),
+                                  'season': sa.types.INTEGER(),
+                                  'game_type': sa.types.VARCHAR(length=255),
+                                  'gp': sa.types.INTEGER(),
+                                  'wins': sa.types.INTEGER(),
+                                  'losses': sa.types.INTEGER(),
+                                  'win_pct': sa.types.FLOAT(),
+                                  'fgm': sa.types.FLOAT(),
+                                  'fga': sa.types.FLOAT(),
+                                  'fg_pct': sa.types.FLOAT(),
+                                  'fg3m': sa.types.FLOAT(),
+                                  'fg3a': sa.types.FLOAT(),
+                                  'fg3_pct': sa.types.FLOAT(),
+                                  'ftm': sa.types.FLOAT(),
+                                  'fta': sa.types.FLOAT(),
+                                  'ft_pct': sa.types.FLOAT(),
+                                  'pts': sa.types.FLOAT(),
+                                  'reb': sa.types.FLOAT(),
+                                  'oreb': sa.types.FLOAT(),
+                                  'dreb': sa.types.FLOAT(),
+                                  'ast': sa.types.FLOAT(),
+                                  'stl': sa.types.FLOAT(),
+                                  'blk': sa.types.FLOAT(),
+                                  'tov': sa.types.FLOAT(),
+                                  'pts_off_tov': sa.types.FLOAT(),
+                                  'fst_brk_pts': sa.types.FLOAT(),
+                                  'pts_in_pnt': sa.types.FLOAT(),
+                                  'pf': sa.types.FLOAT(),
+                                  'tech_fl': sa.types.FLOAT(),
+                                  'flag_fl': sa.types.FLOAT(),
+                                  'fgm_opp': sa.types.FLOAT(),
+                                  'fga_opp': sa.types.FLOAT(),
+                                  'fg_pct_opp': sa.types.FLOAT(),
+                                  'fg3m_opp': sa.types.FLOAT(),
+                                  'fg3a_opp': sa.types.FLOAT(),
+                                  'fg3_pct_opp': sa.types.FLOAT(),
+                                  'ftm_opp': sa.types.FLOAT(),
+                                  'fta_opp': sa.types.FLOAT(),
+                                  'ft_pct_opp': sa.types.FLOAT(),
+                                  'pts_opp': sa.types.FLOAT(),
+                                  'reb_opp': sa.types.FLOAT(),
+                                  'oreb_opp': sa.types.FLOAT(),
+                                  'dreb_opp': sa.types.FLOAT(),
+                                  'ast_opp': sa.types.FLOAT(),
+                                  'stl_opp': sa.types.FLOAT(),
+                                  'blk_opp': sa.types.FLOAT(),
+                                  'tov_opp': sa.types.FLOAT(),
+                                  'pts_off_tov_opp': sa.types.FLOAT(),
+                                  'fst_brk_pts_opp': sa.types.FLOAT(),
+                                  'pts_in_pnt_opp': sa.types.FLOAT(),
+                                  'pf_opp': sa.types.FLOAT(),
+                                  'tech_fl_opp': sa.types.FLOAT(),
+                                  'flag_fl_opp': sa.types.FLOAT(),
+                                  'mp': sa.types.FLOAT(),
+                                  'poss': sa.types.FLOAT(),
+                                  'pace': sa.types.FLOAT(),
+                                  'off_rtg': sa.types.FLOAT(),
+                                  'def_rtg': sa.types.FLOAT(),
+                                  'net_rtg': sa.types.FLOAT(),
+                                  'fg3_rate': sa.types.FLOAT(),
+                                  'ft_rate': sa.types.FLOAT(),
+                                  'efg_pct': sa.types.FLOAT(),
+                                  'tov_pct': sa.types.FLOAT(),
+                                  'oreb_pct': sa.types.FLOAT(),
+                                  'ff_ft_rate': sa.types.FLOAT(),
+                                  'fg3_rate_opp': sa.types.FLOAT(),
+                                  'ft_rate_opp': sa.types.FLOAT(),
+                                  'efg_pct_opp': sa.types.FLOAT(),
+                                  'tov_pct_opp': sa.types.FLOAT(),
+                                  'oreb_oct_opp': sa.types.FLOAT(),
+                                  'ff_ft_rate_opp': sa.types.FLOAT(),
+                                  'lsst_update_dts': sa.types.FLOAT()})	
 
 def main():
     engine=get_engine()

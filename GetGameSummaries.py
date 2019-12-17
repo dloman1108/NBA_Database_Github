@@ -83,6 +83,8 @@ def append_game_summary(date_str,engine):
         if 'headlines' in event['competitions'][0]:
             if 'description' in event['competitions'][0]['headlines'][0]:
                 headline_long=re.sub('&#39;',"'",event['competitions'][0]['headlines'][0]['description'])
+                if len(headline_long) > 255:
+                    headline_long = headline_long[:255]
             else:
                 headline_long=None
             if 'shortLinkText' in event['competitions'][0]['headlines'][0]:
@@ -92,6 +94,7 @@ def append_game_summary(date_str,engine):
         else:
             headline_long=None
             headline_short=None
+            
             
         #Get home team details (name, abbreviation, ID, score, WinFLG)
         home_team=event['competitions'][0]['competitors'][0]['team']['displayName']
@@ -259,7 +262,7 @@ def get_dates(engine):
     dates=[str(d)[:4]+str(d)[5:7]+str(d)[8:10] for d in pd.date_range(start, end) if d.month < 7 or d.month >= 10]
     return dates
 
-
+    
 def update_game_summaries(engine,dates): 
     #Iterate through list of dates, appending each days games
     cnt=0
