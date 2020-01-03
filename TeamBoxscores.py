@@ -195,8 +195,8 @@ def append_team_boxscores(game_id,engine):
     
 def get_engine():
     #Get credentials stored in sql.yaml file (saved in root directory)
-    if os.path.isfile('/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml'):
-        with open("/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml", 'r') as stream:
+    if os.path.isfile('/sql.yaml'):
+        with open("/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
             
             #domain=data_loaded['SQL_DEV']['domain']

@@ -18,8 +18,8 @@ import re
 
 
 def get_engine():
-    if os.path.isfile('/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml'):
-        with open("/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml", 'r') as stream:
+    if os.path.isfile('/sql.yaml'):
+        with open("/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
             
             #domain=data_loaded['SQL_DEV']['domain']
