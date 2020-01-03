@@ -221,8 +221,8 @@ def append_game_summary(date_str,engine):
 
 #Get credentials stored in sql.yaml file (saved in root directory)
 def get_engine():
-    if os.path.isfile('/sql.yaml'):
-        with open("/sql.yaml", 'r') as stream:
+    if os.path.isfile('/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml'):
+        with open("/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
             
             #domain=data_loaded['SQL_DEV']['domain']
@@ -243,21 +243,31 @@ from datetime import datetime
 from datetime import date
 
 def get_dates(engine):
-    max_date_query='''
+    min_date_query='''
 
     select 
-        max(date) max_date
+        max(date) min_date
     from 
         nba.game_summaries
     where
         status='Final'
 
     '''
+    
+    max_date_query='''
+
+    select 
+        max(date) max_date
+    from 
+        nba.game_summaries
+
+    '''
+    
 
     #Iterate through date strings to get game summaries for each date
 
-    start = pd.read_sql(max_date_query,engine).loc[0]['max_date']
-    end = date.today()
+    start = pd.read_sql(min_date_query,engine).loc[0]['min_date']
+    end = pd.read_sql(max_date_query,engine).loc[0]['max_date']
 
     dates=[str(d)[:4]+str(d)[5:7]+str(d)[8:10] for d in pd.date_range(start, end) if d.month < 7 or d.month >= 10]
     return dates
@@ -281,15 +291,15 @@ def update_game_summaries(engine,dates):
             continue
     
  
-def drop_old_rows(engine):
+def drop_sched_rows(engine):
     #Drop old rows from games that were scheduled and now completed
     drop_old_rows_query='''
 
     delete from
         nba.game_summaries gs
     where
-        status != 'Final'
-        and date < (now() - interval '1 day')
+        status = 'Scheduled'
+        --and date < (now() - interval '1 day')
 
     '''
 
@@ -300,8 +310,8 @@ def drop_old_rows(engine):
 def main():
     engine=get_engine()
     dates_list=get_dates(engine)
+    drop_sched_rows(engine)
     update_game_summaries(engine,dates_list)
-    drop_old_rows(engine)
     
     
     
