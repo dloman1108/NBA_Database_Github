@@ -292,7 +292,7 @@ def update_game_summaries(engine,dates):
     
  
 def drop_sched_rows(engine):
-    #Drop old rows from games that were scheduled and now completed
+    #Drop old rows from games that were scheduled and now completed or has new metadata
     drop_old_rows_query='''
 
     delete from

@@ -43,6 +43,7 @@ def get_HomeScore(x,ht,at):
 def get_AwayScore(x,ht,at):
     return int(x.score[:x.score.index('-')-1])
         
+
 def get_Quarter(x,pbp_df):
     if 'End of the 1st Quarter' in pbp_df.play.tolist():
         q1_ind=pbp_df.play.tolist().index('End of the 1st Quarter')
@@ -152,26 +153,82 @@ def get_Quarter(x,pbp_df):
     elif x.name == ge_ind:
         return None
     else:
-        return None
-    
-
+        return None        
+            
+'''
 def get_Player(x):
+    play=x.play.lower()
     keywords=['shooting','misses','offensive',
           'defensive','makes','loose',"'s",'enters','20 Sec',
-          'Full','lost ball','personal','bad','delay', 'non-unsportsmanlike',
-          'out','flagrant','technical','kicked','palming','no turnover','turnover'
+          'Full','bad','delay', 'non-unsportsmanlike','steps',
+          'out','flagrant','technical','kicked','palming','no turnover'
           'illegal','out of','3 second','post','possession','hanging on rim',
-          'double','steps out','back court','punched','disc dribble','discontinued','taunting']
-    for kw in keywords:
-        try:
-            if kw=="'s":
-                player=x.play[x.play.index('blocks')+7:x.play.index(kw)].strip()
-            else:
-                player=x.play[:x.play.index(kw)].strip()
-            if any(x.isupper() for x in player):
-                return player
-        except:
-            continue
+          'double','back court','punched','disc dribble','discontinued',
+          'taunting','possession','double','technical','post',
+          'personal','turnover','lost ball']
+    #certain statements are not player-specific
+    if play[:8] == 'jumpball'\
+        or "coach's challenge" in play\
+        or 'sec. time' in play\
+        or 'full time' in play\
+        or ' vs. ' in play:
+            return None
+    else:
+        for kw in keywords:
+            try:
+                if kw=="'s":
+                    player=play[play.index('blocks')+7:play.index(kw)].strip()
+                else:
+                    player=play[:play.index(kw)].strip()
+                if any(x.isupper() for x in player):
+                    return player
+            except:
+                continue
+'''   
+            
+def get_Player(x):
+    play=x.play
+    keywords=['shooting','misses','offensive',
+          'defensive','makes','loose',"'s",'enters','20 Sec',
+          'full ','bad ','delay', 'non-unsportsmanlike','steps',
+          'out ','flagrant','technical','kicked','palming','no turnover','traveling',
+          'illegal','out of','3 second','possession','hanging on rim',
+          'inbound','clear path','double','back court','punched','disc dribble',
+          'discontinu','taunting','possession','double','technical','post ','jump ball',
+          'personal','turnover','lost ball']
+    #certain statements are not player-specific
+    if play.lower()[:8] == 'jumpball'\
+        or 'quarter' in play.lower()\
+        or 'end game' in play.lower()\
+        or ' vs. ' in play:
+            return None
+            
+    else:
+        start_index=0
+        kw_index=100
+        for kw in keywords:
+            if kw in play.lower():
+                #blocked shot syntax treated differently
+                if kw=="'s":
+                    if 'blocks' in play.lower():
+                        start_index=play.index('blocks')+7
+                    elif 'rejects' in play.lower():
+                        start_index=play.index('rejects')+7
+                    elif 'swats' in play.lower():
+                        start_index=play.index('swats')+7
+                else:
+                    start_index=0
+                    
+                if play.lower().index(kw) < kw_index:
+                    kw_index=play.lower().index(kw)
+                
+        player=play[start_index:kw_index].strip()
+        if any(x.isupper() for x in player):
+            return player
+        else:
+            return None
+            
+            
         
 #Classify play type based on text               
 def get_PlayType(x):
@@ -194,10 +251,16 @@ def get_PlayType(x):
         return 'Substitution'
     if 'timeout' in play:
         return 'Timeout'
-    if 'turnover' in play or 'bad pass' in play \
+    if 'goaltending' in play:
+        return 'Goaltending'
+    if 'delay of game' in play or 'lane violaton' in play or 'technical' in play:
+        return 'violation'
+    if ('turnover' in play and 'no turnover' not in play)\
+    or 'bad pass' in play or 'steps out' in play\
     or 'travel' in play or 'lost ball' in play \
     or 'backcourt' in play or 'shot clock violation' in play \
     or 'discontinue dribble' in play or 'double dribble' in play \
+    or 'out of bounds' in play or 'steps' in play \
     or 'charge' in play or ('foul' in play and 'offensive' in play):
         return 'Turnover'
     if '3 second' in play or 'illegal defense' in play:
@@ -206,6 +269,16 @@ def get_PlayType(x):
         return 'Foul'
     if 'kicked ball' in play:
         return 'Kicked Ball'
+    if 'start of' in play and 'quarter' in play:
+        return 'Quarter Start'
+    if 'end of' in play and 'quarter' in play:
+        return 'Quarter End'
+    if 'end of' in play and 'game' in play:
+        return 'Game End'
+    if 'start of' in play and 'overtime' in play:
+        return 'OT Start'
+    if 'end of' in play and 'overtime' in play:
+        return 'OT End'
     
     
 #Get player responsible for event        
@@ -224,6 +297,10 @@ def get_StolenBy(x):
 def get_BlockedBy(x):
     if 'blocks' in x.play:
         return x.play[:x.play.index('blocks')].strip()
+    elif 'rejects' in x.play:
+        return x.play[:x.play.index('rejects')].strip()
+    elif 'swats' in x.play:
+        return x.play[:x.play.index('swats')].strip()
         
 def get_Points(x,df):
     if 'makes' in x.play:
@@ -334,8 +411,8 @@ def append_pbp(game_id,engine):
 
 #Get credentials stored in sql.yaml file (saved in root directory)
 def get_engine():
-    if os.path.isfile('/sql.yaml'):
-        with open("/sql.yaml", 'r') as stream:
+    if os.path.isfile('/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml'):
+        with open("/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
             
             #domain=data_loaded['SQL_DEV']['domain']
@@ -362,10 +439,12 @@ def get_gameids(engine):
         nba.game_summaries gs
     left join
         nba.play_by_play p on gs.game_id=p.game_id
+    left join
+        nba.bad_gameids b on gs.game_id=b.game_id and b.table='play_by_play'
     where
         p.game_id is Null
+        and b.game_id is Null
         and gs.status='Final'
-        and gs.season=(select max(season) from nba.game_summaries)
     order by
         gs.season
     '''
@@ -374,17 +453,11 @@ def get_gameids(engine):
     
     return game_ids.game_id.tolist()
 
-    
-def update_play_by_play(engine,game_id_list):   
+ 
+def update_play_by_play(engine,game_id_list):
     cnt=0
-    bad_gameids=[]
+    print('Total Games: ',len(game_id_list))
     for game_id in game_id_list:
-        
-        if np.mod(cnt,2000)==0:
-            if cnt == 0:
-                print('Total GameIDs: ',len(game_id_list))
-            else:
-                print('CHECK: ',cnt,len(bad_gameids))
     
         try:
             append_pbp(game_id,engine)
@@ -393,11 +466,17 @@ def update_play_by_play(engine,game_id_list):
                 print(str(round(float(cnt*100.0/len(game_id_list)),2))+'%')
             
         except:
-            bad_gameids.append(game_id)
+            bad_gameid_df=pd.DataFrame({'game_id':[game_id],'table':['play_by_play']})
+            bad_gameid_df.to_sql('bad_gameids',
+                                  con=engine,
+                                  schema='nba',
+                                  index=False,
+                                  if_exists='append',
+                                  dtype={'game_id': sa.types.INTEGER(),
+                                         'table': sa.types.VARCHAR(length=255)})
             cnt+=1
             if np.mod(cnt,100) == 0:
                 print(str(round(float(cnt*100.0/len(game_id_list)),2))+'%')
-                
             continue
             
  

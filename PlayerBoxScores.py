@@ -159,8 +159,8 @@ def append_boxscores(game_id,engine):
 
 def get_engine():
     #Get credentials stored in sql.yaml file (saved in root directory)
-    if os.path.isfile('/sql.yaml'):
-        with open("/sql.yaml", 'r') as stream:
+    if os.path.isfile('/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml'):
+        with open("/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
             
             #domain=data_loaded['SQL_DEV']['domain']
@@ -186,10 +186,12 @@ def get_gameids(engine):
         nba.game_summaries gs
     left join
         nba.player_boxscores p on gs.game_id=p.game_id 
+    left join
+        nba.bad_gameids b on gs.game_id=b.game_id and b.table='player_boxscores'
     where
         p.game_id is Null
+        and b.game_id is Null
         and gs.status='Final'
-        and gs.season=(select max(season) from nba.game_summaries)
     order by
         gs.season
     '''
@@ -201,14 +203,8 @@ def get_gameids(engine):
 
 def update_player_boxscores(engine,game_id_list):
     cnt=0
-    bad_gameids=[]
+    print('Total Games: ',len(game_id_list))
     for game_id in game_id_list:
-        
-        if np.mod(cnt,2000)==0:
-            if cnt == 0:
-                print('Total Games: ',len(game_id_list))
-            else:
-                print('CHECK: ',cnt,len(bad_gameids))
     
         try:
             append_boxscores(game_id,engine)
@@ -217,7 +213,14 @@ def update_player_boxscores(engine,game_id_list):
                 print(str(round(float(cnt*100.0/len(game_id_list)),2))+'%')
             
         except:
-            bad_gameids.append(game_id)
+            bad_gameid_df=pd.DataFrame({'game_id':[game_id],'table':['player_boxscores']})
+            bad_gameid_df.to_sql('bad_gameids',
+                                  con=engine,
+                                  schema='nba',
+                                  index=False,
+                                  if_exists='append',
+                                  dtype={'game_id': sa.types.INTEGER(),
+                                         'table': sa.types.VARCHAR(length=255)})
             cnt+=1
             if np.mod(cnt,100) == 0:
                 print(str(round(float(cnt*100.0/len(game_id_list)),2))+'%')
