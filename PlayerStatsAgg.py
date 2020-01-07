@@ -16,14 +16,14 @@ def get_engine():
 	#Get credentials stored in sql.yaml file (saved in root directory)
 	if os.path.isfile('/sql.yaml'):
 	    with open("/sql.yaml", 'r') as stream:
-		data_loaded = yaml.load(stream)
+	        data_loaded = yaml.load(stream)
 
-		#domain=data_loaded['SQL_DEV']['domain']
-		user=data_loaded['BBALL_STATS']['user']
-		password=data_loaded['BBALL_STATS']['password']
-		endpoint=data_loaded['BBALL_STATS']['endpoint']
-		port=data_loaded['BBALL_STATS']['port']
-		database=data_loaded['BBALL_STATS']['database']
+	        #domain=data_loaded['SQL_DEV']['domain']
+	        user=data_loaded['BBALL_STATS']['user']
+	        password=data_loaded['BBALL_STATS']['password']
+	        endpoint=data_loaded['BBALL_STATS']['endpoint']
+	        port=data_loaded['BBALL_STATS']['port']
+	        database=data_loaded['BBALL_STATS']['database']
 
 	db_string = "postgres://{0}:{1}@{2}:{3}/{4}".format(user,password,endpoint,port,database)
 	engine=sa.create_engine(db_string)
@@ -149,7 +149,7 @@ def calculate_player_stats(engine):
                                 'fg3_pct': sa.types.FLOAT(),
                                 'ftm': sa.types.FLOAT(),
                                 'fta': sa.types.FLOAT(),
-                                'ft_pct': sa.types.FLOAT()
+                                'ft_pct': sa.types.FLOAT(),
                                 'oreb': sa.types.FLOAT(),
                                 'dreb': sa.types.FLOAT(),
                                 'reb': sa.types.FLOAT(),
@@ -186,7 +186,7 @@ def calculate_player_stats(engine):
                                 'blk_pct': sa.types.FLOAT(),
                                 'tov_pct': sa.types.FLOAT(),
                                 'usg_pct': sa.types.FLOAT(),
-                                'last_update_dts': sa.types.FLOAT())})
+                                'last_update_dts': sa.types.DateTime()})
 
 def main():
     engine=get_engine()
