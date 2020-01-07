@@ -98,6 +98,7 @@ def calculate_player_stats(engine):
 		nba.team_stats_agg tsa on pb.team=tsa.team and gs.game_type=tsa.game_type and gs.season=tsa.season
 	where 1=1
 	    and pb.dnp_reason is null
+	    and pb.mp > 0
 	group by
 	    pb.player
 	    ,pb.player_id
