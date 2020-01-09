@@ -163,7 +163,7 @@ def get_gameids(engine):
         nba.bad_gameids b on gs.game_id=b.game_id and b.table='shot_chart'
     where
         p.game_id is Null
-        and b.game_id is not Null
+        and b.game_id is Null
         and gs.status='Final'
     order by
         gs.season
