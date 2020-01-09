@@ -221,8 +221,8 @@ def append_game_summary(date_str,engine):
 
 #Get credentials stored in sql.yaml file (saved in root directory)
 def get_engine():
-    if os.path.isfile('/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml'):
-        with open("/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml", 'r') as stream:
+    if os.path.isfile('/sql.yaml'):
+        with open("/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
             
             #domain=data_loaded['SQL_DEV']['domain']
@@ -246,7 +246,7 @@ def get_dates(engine):
     min_date_query='''
 
     select 
-        max(date) min_date
+        dateadd(day,1,max(date)) min_date
     from 
         nba.game_summaries
     where
