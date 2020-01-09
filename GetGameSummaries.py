@@ -246,7 +246,7 @@ def get_dates(engine):
     min_date_query='''
 
     select 
-        dateadd(day,1,max(date)) min_date
+        max(date) + INTERVAL '1 day' min_date
     from 
         nba.game_summaries
     where
