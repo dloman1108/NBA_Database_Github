@@ -42,7 +42,14 @@ def get_HomeScore(x,ht,at):
         
 def get_AwayScore(x,ht,at):
     return int(x.score[:x.score.index('-')-1])
-        
+
+'''
+def get_TimeMinutes(x):
+    if ':' in x.time:
+        return int(x.time[:x.time.index(':')])+int(x.time[x.time.index(':')+1:])/60.
+    else:
+        return x.time
+'''    
 
 def get_Quarter(x,pbp_df):
     if 'End of the 1st Quarter' in pbp_df.play.tolist():
@@ -96,41 +103,40 @@ def get_Quarter(x,pbp_df):
     else:
         ge_ind=-1
         
-    try:
+    if 'End of the 1st  Overtime' in pbp_df.play.tolist():
         ot1_ind=pbp_df.play.tolist().index('End of the 1st  Overtime')
-    except:
-        try:
-            ot1_ind=pbp_df.play.tolist().index('End of the 1st  Overtime.')
-        except:
-            ot1_ind=-1
-    try:
+    elif 'Start of the 1st Overtime' in pbp_df.play.tolist():
+        ot1_ind=pbp_df.play.tolist().index('Start of the 1st Overtime')
+    else:
+        ot1_ind=-1
+        
+    if 'End of the 2nd  Overtime' in pbp_df.play.tolist():
         ot2_ind=pbp_df.play.tolist().index('End of the 2nd  Overtime')
-    except:
-        try:
-            ot2_ind=pbp_df.play.tolist().index('End of the 2nd  Overtime.')
-        except:
-            ot2_ind=-1
-    try:
+    elif 'Start of the 2nd Overtime' in pbp_df.play.tolist():
+        ot2_ind=pbp_df.play.tolist().index('Start of the 2nd Overtime')
+    else:
+        ot2_ind=-1
+        
+    if 'End of the 3rd  Overtime' in pbp_df.play.tolist():
         ot3_ind=pbp_df.play.tolist().index('End of the 3rd  Overtime')
-    except:
-        try:
-            ot3_ind=pbp_df.play.tolist().index('End of the 3rd  Overtime.')
-        except:
-            ot3_ind=-1
-    try:
+    elif 'Start of the 3rd Overtime' in pbp_df.play.tolist():
+        ot3_ind=pbp_df.play.tolist().index('Start of the 3rd Overtime')
+    else:
+        ot3_ind=-1
+        
+    if 'End of the 4th  Overtime' in pbp_df.play.tolist():
         ot4_ind=pbp_df.play.tolist().index('End of the 4th  Overtime')
-    except:
-        try:
-            ot4_ind=pbp_df.play.tolist().index('End of the 4th  Overtime.')
-        except:
-            ot4_ind=-1
-    try:
+    elif 'Start of the 4th Overtime' in pbp_df.play.tolist():
+        ot4_ind=pbp_df.play.tolist().index('Start of the 4th Overtime')
+    else:
+        ot4_ind=-1
+        
+    if 'End of the 5th  Overtime' in pbp_df.play.tolist():
         ot5_ind=pbp_df.play.tolist().index('End of the 5th  Overtime')
-    except:
-        try:
-            ot5_ind=pbp_df.play.tolist().index('End of the 5th  Overtime.')
-        except:
-            ot5_ind=-1
+    elif 'Start of the 5th Overtime' in pbp_df.play.tolist():
+        ot5_ind=pbp_df.play.tolist().index('Start of the 5th Overtime')
+    else:
+        ot5_ind=-1
             
     if x.name <= q1_ind:
         return '1'
@@ -155,52 +161,27 @@ def get_Quarter(x,pbp_df):
     else:
         return None        
             
-'''
-def get_Player(x):
-    play=x.play.lower()
-    keywords=['shooting','misses','offensive',
-          'defensive','makes','loose',"'s",'enters','20 Sec',
-          'Full','bad','delay', 'non-unsportsmanlike','steps',
-          'out','flagrant','technical','kicked','palming','no turnover'
-          'illegal','out of','3 second','post','possession','hanging on rim',
-          'double','back court','punched','disc dribble','discontinued',
-          'taunting','possession','double','technical','post',
-          'personal','turnover','lost ball']
-    #certain statements are not player-specific
-    if play[:8] == 'jumpball'\
-        or "coach's challenge" in play\
-        or 'sec. time' in play\
-        or 'full time' in play\
-        or ' vs. ' in play:
-            return None
-    else:
-        for kw in keywords:
-            try:
-                if kw=="'s":
-                    player=play[play.index('blocks')+7:play.index(kw)].strip()
-                else:
-                    player=play[:play.index(kw)].strip()
-                if any(x.isupper() for x in player):
-                    return player
-            except:
-                continue
-'''   
             
 def get_Player(x):
     play=x.play
-    keywords=['shooting','misses','offensive',
-          'defensive','makes','loose',"'s",'enters','20 Sec',
-          'full ','bad ','delay', 'non-unsportsmanlike','steps',
+    keywords=['shooting','misses','missed','miss ','offensive','dunks','three point','made',
+          'defensive','makes','loose',"'s","s' "," 's",'enters','20 Sec',' pass',' controls',
+          'full ','bad ','delay', 'non-unsportsmanlike','steps','step ','team technical',
           'out ','flagrant','technical','kicked','palming','no turnover','traveling',
-          'illegal','out of','3 second','possession','hanging on rim',
-          'inbound','clear path','double','back court','punched','disc dribble',
+          'illegal','out of','out-of','3 second','possession','hanging on rim','travelling',
+          'inbound','clear path','double','back court','backcourt','punched','disc dribble','violation','lane violation',
           'discontinu','taunting','possession','double','technical','post ','jump ball',
-          'personal','turnover','lost ball']
+          'personal','turnover','lost ball','away from',' foul','ejected','in bound',
+          'no foul','(','alley-oop','5 sec','basket from below','swinging elbows',
+          '20 sec','hanging','official timeout','off foul','off goaltending','no violation','shot clock',
+          'team shot clock','challenge','basket','jumpball','non unsport','end of game',
+          'end of','start of','team violation','punching','goaltending','kick ball','opposite',
+          'deadball','8 second','goal tending',"coach's challenge",'instant']
     #certain statements are not player-specific
     if play.lower()[:8] == 'jumpball'\
         or 'quarter' in play.lower()\
         or 'end game' in play.lower()\
-        or ' vs. ' in play:
+        or 'vs.' in play:
             return None
             
     else:
@@ -209,7 +190,7 @@ def get_Player(x):
         for kw in keywords:
             if kw in play.lower():
                 #blocked shot syntax treated differently
-                if kw=="'s":
+                if kw in ["'s","s' "," 's"]:
                     if 'blocks' in play.lower():
                         start_index=play.index('blocks')+7
                     elif 'rejects' in play.lower():
@@ -351,7 +332,7 @@ def append_pbp(game_id,engine):
     
     if len(pbp_df) > 0:
         try:
-            pbp_df['team']=[get_Team(res['src'],home_team,away_team) for res in soup.find_all('img',attrs={'class','team-logo'})][len(pbp_df)*-1:] 
+            pbp_df['team']=[get_Team(res['src'],home_team,away_team) for res in soup.find_all('img',attrs={'class','team-logo'})][len(pbp_df)*-1:]  
         except:
             pbp_df['team']=None
             
@@ -379,10 +360,13 @@ def append_pbp(game_id,engine):
         pbp_df['blocked_by']=[]
         pbp_df['subbed_in']=[]
         pbp_df['subbed_out']=[]
+        
+    #pbp_df['time_minutes']=pbp_df.apply(lambda x: get_TimeMinutes(x),axis=1)
     
-    column_order=['game_id','play','score','time','team','home_score','away_score',
-               'quarter','player','play_type','points','assistor','stolen_by',
-               'blocked_by','subbed_in','subbed_out']
+    column_order=['game_id','play','score','time',#'time_minutes'
+                  'team','home_score','away_score','quarter','player',
+                  'play_type','points','assistor','stolen_by',
+                  'blocked_by','subbed_in','subbed_out']
     
     pbp_df[column_order].to_sql('play_by_play',
                                 con=engine,
@@ -393,6 +377,7 @@ def append_pbp(game_id,engine):
                                        'play': sa.types.VARCHAR(length=255),
                                        'score': sa.types.VARCHAR(length=255),
                                        'time': sa.types.VARCHAR(length=255),
+                                       #'time_minutes': sa.types.FLOAT(),
                                        'team': sa.types.VARCHAR(length=255),
                                        'home_score': sa.types.INTEGER(),
                                        
@@ -411,8 +396,8 @@ def append_pbp(game_id,engine):
 
 #Get credentials stored in sql.yaml file (saved in root directory)
 def get_engine():
-    if os.path.isfile('/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml'):
-        with open("/Users/dh08loma/Documents/Projects/Bracket Voodoo/sql.yaml", 'r') as stream:
+    if os.path.isfile('/sql.yaml'):
+        with open("/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
             
             #domain=data_loaded['SQL_DEV']['domain']

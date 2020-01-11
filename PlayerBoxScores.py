@@ -69,11 +69,13 @@ def append_boxscores(game_id,engine):
                 player_stats_df[col]=list(map(lambda x: float(x),player_stats_df[col]))
             except:
                 continue
-            
-        if ind_stop != ind_team:
-            dnp_df=pd.DataFrame(np.array_split(results[ind_stop:ind_team],(ind_team-ind_stop)/2.),
-                   columns=['player','dnp_reason'])
-        else:
+        try:
+            if ind_stop != ind_team:
+                dnp_df=pd.DataFrame(np.array_split(results[ind_stop:ind_team],(ind_team-ind_stop)/2.),
+                       columns=['player','dnp_reason'])
+            else:
+                dnp_df=pd.DataFrame(columns=['player','dnp_reason'])
+        except:
             dnp_df=pd.DataFrame(columns=['player','dnp_reason'])
                 
         player_stats_df=player_stats_df.append(dnp_df).reset_index(drop=True)
@@ -88,6 +90,7 @@ def append_boxscores(game_id,engine):
         
         try:
             player_stats_df['position']=[el.string for el in tables[ind].find_all('span')][2::3][:len(player_stats_df)]
+            
         except:
             spans=[el.string for el in tables[ind].find_all('span')]
             pos=[]

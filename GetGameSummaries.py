@@ -243,31 +243,23 @@ from datetime import datetime
 from datetime import date
 
 def get_dates(engine):
-    min_date_query='''
+    date_query='''
 
     select 
-        max(date) + INTERVAL '1 day' min_date
+        min(date) min_date
+        ,max(date) max_date
     from 
         nba.game_summaries
     where
-        status='Final'
-
-    '''
-    
-    max_date_query='''
-
-    select 
-        max(date) max_date
-    from 
-        nba.game_summaries
+        status='Scheduled'
 
     '''
     
 
     #Iterate through date strings to get game summaries for each date
 
-    start = pd.read_sql(min_date_query,engine).loc[0]['min_date']
-    end = pd.read_sql(max_date_query,engine).loc[0]['max_date']
+    start = pd.read_sql(date_query,engine).loc[0]['min_date']
+    end = pd.read_sql(date_query,engine).loc[0]['max_date']
 
     dates=[str(d)[:4]+str(d)[5:7]+str(d)[8:10] for d in pd.date_range(start, end) if d.month < 7 or d.month >= 10]
     return dates

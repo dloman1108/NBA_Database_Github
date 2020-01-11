@@ -111,7 +111,7 @@ def append_team_boxscores(game_id,engine):
     team_stats_df=team_stats_df.merge(team_stats_df[['opp_team','poss']],left_on='team',right_on='opp_team',suffixes=('', '_opp')).drop('opp_team_opp',axis=1)   
     
     team_stats_df['ortg']=team_stats_df.pts*100/team_stats_df.poss
-    team_stats_df['drtg']=team_stats_df.pts_opp*100/team_stats_df.poss*100
+    team_stats_df['drtg']=team_stats_df.pts_opp*100/team_stats_df.poss
     team_stats_df['net_rtg']=(team_stats_df.pts-team_stats_df.pts_opp)/team_stats_df.poss
     
     column_order=['game_id', 'team', 'pts', 'fg', 'fgm', 'fga', 'fg_pct', 'fg3', 'fg3_pct', 
