@@ -220,7 +220,7 @@ def calculate_team_stats(engine):
                                   'tov_pct_opp': sa.types.FLOAT(),
                                   'oreb_oct_opp': sa.types.FLOAT(),
                                   'ff_ft_rate_opp': sa.types.FLOAT(),
-                                  'lsst_update_dts': sa.types.FLOAT()})	
+                                  'last_update_dts': sa.types.DateTime()})	
 
 def main():
     engine=get_engine()
