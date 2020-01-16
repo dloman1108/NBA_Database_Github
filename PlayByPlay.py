@@ -332,9 +332,9 @@ def append_pbp(game_id,engine):
     
     if len(pbp_df) > 0:
         try:
-            pbp_df['team']=[get_Team(res['src'],home_team,away_team) for res in soup.find_all('img',attrs={'class','team-logo'})][len(pbp_df)*-1:]  
+            pbp_df['team_abbr']=[get_Team(res['src'],home_team,away_team) for res in soup.find_all('img',attrs={'class','team-logo'})][len(pbp_df)*-1:]  
         except:
-            pbp_df['team']=None
+            pbp_df['team_abbr']=None
             
         pbp_df['home_score']=pbp_df.apply(lambda x: get_HomeScore(x,home_team,away_team),axis=1)
         pbp_df['away_score']=pbp_df.apply(lambda x: get_AwayScore(x,home_team,away_team),axis=1)
@@ -348,7 +348,7 @@ def append_pbp(game_id,engine):
         pbp_df['subbed_in']=pbp_df.apply(lambda x: get_SubbedIn(x),axis=1)   
         pbp_df['subbed_out']=pbp_df.apply(lambda x: get_SubbedOut(x),axis=1) 
     else:
-        pbp_df['team']=[]
+        pbp_df['team_abbr']=[]
         pbp_df['team_score']=[]
         pbp_df['opp_team_score']=[]
         pbp_df['quarter']=[]
@@ -364,7 +364,7 @@ def append_pbp(game_id,engine):
     #pbp_df['time_minutes']=pbp_df.apply(lambda x: get_TimeMinutes(x),axis=1)
     
     column_order=['game_id','play','score','time',#'time_minutes'
-                  'team','home_score','away_score','quarter','player',
+                  'team_abbr','home_score','away_score','quarter','player',
                   'play_type','points','assistor','stolen_by',
                   'blocked_by','subbed_in','subbed_out']
     
@@ -378,7 +378,7 @@ def append_pbp(game_id,engine):
                                        'score': sa.types.VARCHAR(length=255),
                                        'time': sa.types.VARCHAR(length=255),
                                        #'time_minutes': sa.types.FLOAT(),
-                                       'team': sa.types.VARCHAR(length=255),
+                                       'team_abbr': sa.types.VARCHAR(length=255),
                                        'home_score': sa.types.INTEGER(),
                                        
                                        'away_score': sa.types.INTEGER(),

@@ -107,7 +107,7 @@ def append_boxscores(game_id,engine):
             
         player_stats_df=player_stats_df.replace('-----','0-0').replace('--',0)
         
-        player_stats_df['team']=results_head_split[ind-1][0]
+        player_stats_df['team_abbr']=results_head_split[ind-1][0]
         player_stats_df['game_id']=game_id
                 
                 
@@ -122,7 +122,7 @@ def append_boxscores(game_id,engine):
         
         player_stats_df['starter_flg']=[1.0]*5+[0.0]*(len(player_stats_df)-5)
         
-        column_order=['game_id','player','player_id','position','team','starter_flg','mp',
+        column_order=['game_id','player','player_id','position','team_abbr','starter_flg','mp',
                       'fg','fgm','fga','fg3','fg3m','fg3a','ft','ftm','fta','oreb','dreb',
                       'reb','ast','stl','blk','tov','pf','plus_minus','pts','dnp_reason']
         
@@ -135,7 +135,7 @@ def append_boxscores(game_id,engine):
                                                     'player': sa.types.VARCHAR(length=255),
                                                     'player_id': sa.types.INTEGER(),
                                                     'position': sa.types.CHAR(length=2),
-                                                    'team': sa.types.VARCHAR(length=255),
+                                                    'team_abbr': sa.types.VARCHAR(length=255),
                                                     'starter_flg': sa.types.BOOLEAN(),
                                                     'mp': sa.types.INTEGER(),
                                                     'fg': sa.types.VARCHAR(length=255),
