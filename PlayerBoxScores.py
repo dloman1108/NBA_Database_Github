@@ -166,7 +166,7 @@ def get_engine():
         with open("/sql.yaml", 'r') as stream:
             data_loaded = yaml.load(stream)
             
-            #domain=data_loaded['SQL_DEV']['domain']
+            
             user=data_loaded['BBALL_STATS']['user']
             password=data_loaded['BBALL_STATS']['password']
             endpoint=data_loaded['BBALL_STATS']['endpoint']
