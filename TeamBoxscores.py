@@ -229,7 +229,6 @@ def get_gameids(engine):
         p.game_id is Null
         and b.game_id is Null
         and gs.status='Final'
-        and gs.season != 2018
     order by
         gs.season
     '''
