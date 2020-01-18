@@ -38,7 +38,9 @@ def calculate_player_stats(engine):
 	select 
 	    pb.player
 	    ,pb.player_id
-	    ,pb.team
+	    ,tsa.team
+	    ,pb.team_abbr
+	    ,tsa.team_id
 	    ,gs.season
 	    ,gs.game_type
 	    ,count(*) gp
@@ -95,14 +97,16 @@ def calculate_player_stats(engine):
 	join
 	    nba.game_summaries gs on pb.game_id=gs.game_id
 	left join
-		nba.team_stats_agg tsa on pb.team=tsa.team and gs.game_type=tsa.game_type and gs.season=tsa.season
+		nba.team_stats_agg tsa on pb.team_abbr=tsa.team_abbr and gs.game_type=tsa.game_type and gs.season=tsa.season
 	where 1=1
 	    and pb.dnp_reason is null
 	    and pb.mp > 0
 	group by
 	    pb.player
 	    ,pb.player_id
-	    ,pb.team
+	    ,tsa.team
+	    ,pb.team_abbr
+	    ,tsa.team_id
 	    ,gs.season
 		,gs.game_type
 		,tsa.mp

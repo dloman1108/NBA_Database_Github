@@ -36,7 +36,7 @@ def calculate_team_stats(engine):
 	team_stats_agg_query='''
 	with possessions as (
 		select
-			tb.team
+			tb.team_abbr
 			,gs.season
 			,gs.game_type
 			,.5*((sum(tb.fga)+0.4*sum(tb.fta)-1.07*(sum(tb.oreb)*1.0/(sum(tb.oreb)+sum(tb.dreb)))*(sum(tb.fga)-sum(tb.fgm))+sum(tb.tov))+(sum(tb.fga_opp)+0.4*sum(tb.fta_opp)-1.07*(sum(tb.oreb_opp)*1.0/(sum(tb.oreb_opp)+sum(tb.dreb_opp))) * (sum(tb.fga_opp)-sum(tb.fgm_opp))+sum(tb.tov_opp))) poss
@@ -45,16 +45,19 @@ def calculate_team_stats(engine):
 		join
 			nba.game_summaries gs on tb.game_id=gs.game_id and gs.status='Final'
 		group by
-			tb.team
+			tb.team_abbr
 			,gs.season
 			,gs.game_type
 	)
 
 	select
-		tb.team
+		max(case 
+			when tb.team_abbr=gs.home_team_abbr then gs.home_team
+			when tb.team_abbr=gs.away_team_abbr then gs.away_team else Null end) team
+		,tb.team_abbr
 		,max(case 
-			when tb.team=gs.home_team_abbr then gs.home_team_id 
-			when tb.team=gs.away_team_abbr then gs.away_team_id else Null end) team_id
+			when tb.team_abbr=gs.home_team_abbr then gs.home_team_id 
+			when tb.team_abbr=gs.away_team_abbr then gs.away_team_id else Null end) team_id
 		,gs.season
 		,gs.game_type
 		,count(*) gp
@@ -128,15 +131,15 @@ def calculate_team_stats(engine):
 		,sum(tb.ftm_opp)*1.0/sum(tb.fga_opp) ff_ft_rate_opp
 		,now() last_update_dts
 	from
-		nba.team_boxscores tb
+		nba.team_boxscores_new tb
 	join
 		nba.game_summaries gs on tb.game_id=gs.game_id and gs.status='Final'
 	left join
-		(select game_id,team,sum(cast(mp as float)) mp from nba.player_boxscores group by game_id,team) pb on tb.game_id=pb.game_id and tb.team=pb.team
+		(select game_id,team_abbr,sum(cast(mp as float)) mp from nba.player_boxscores group by game_id,team_abbr) pb on tb.game_id=pb.game_id and tb.team_abbr=pb.team_abbr
 	join
-		possessions p on tb.team=p.team and gs.season=p.season and gs.game_type=p.game_type
+		possessions p on tb.team_abbr=p.team_abbr and gs.season=p.season and gs.game_type=p.game_type
 	group by
-		tb.team
+		tb.team_abbr
 		,gs.season
 		,gs.game_type
 		,p.poss
@@ -149,6 +152,7 @@ def calculate_team_stats(engine):
                            index=False,
                            if_exists='replace',
                            dtype={'team': sa.types.VARCHAR(length=255),
+                           		  'team_abbr': sa.types.VARCHAR(length=255),
                                   'team_id': sa.types.INTEGER(),
                                   'season': sa.types.INTEGER(),
                                   'game_type': sa.types.VARCHAR(length=255),
