@@ -39,7 +39,7 @@ def calculate_team_stats(engine):
 			tb.team_abbr
 			,gs.season
 			,gs.game_type
-			,.5*((sum(tb.fga)+0.4*sum(tb.fta)-1.07*(sum(tb.oreb)*1.0/(sum(tb.oreb)+sum(tb.dreb)))*(sum(tb.fga)-sum(tb.fgm))+sum(tb.tov))+(sum(tb.fga_opp)+0.4*sum(tb.fta_opp)-1.07*(sum(tb.oreb_opp)*1.0/(sum(tb.oreb_opp)+sum(tb.dreb_opp))) * (sum(tb.fga_opp)-sum(tb.fgm_opp))+sum(tb.tov_opp))) poss
+			,.5*((sum(tb.fga)+0.4*sum(tb.fta)-1.07*(sum(tb.oreb)*1.0/(sum(tb.oreb)+sum(tb.dreb_opp)))*(sum(tb.fga)-sum(tb.fgm))+sum(tb.tov))+(sum(tb.fga_opp)+0.4*sum(tb.fta_opp)-1.07*(sum(tb.oreb_opp)*1.0/(sum(tb.oreb_opp)+sum(tb.dreb))) * (sum(tb.fga_opp)-sum(tb.fgm_opp))+sum(tb.tov_opp))) poss
 		from
 			nba.team_boxscores tb
 		join
@@ -115,7 +115,7 @@ def calculate_team_stats(engine):
 		,p.poss
 		,48*((p.poss*2)/(2*(sum(pb.mp)/5.0))) pace
 		,sum(tb.pts)/p.poss*100 off_rtg
-		,sum(tb.pts_opp)*100.0/p.poss def_fts
+		,sum(tb.pts_opp)*100.0/p.poss def_rtg
 		,(sum(tb.pts)-sum(tb.pts_opp))/p.poss*100 net_rtg
 		,sum(tb.fg3a)*1.0/sum(tb.fga) fg3_rate
 		,sum(tb.fta)*1.0/sum(tb.fga) ft_rate

@@ -78,7 +78,7 @@ def calculate_player_stats(engine):
 	    ,sum(pb.stl)*36.0/sum(pb.mp) stl_36
 	    ,sum(pb.blk)*36.0/sum(pb.mp) blk_36
 	    ,sum(pb.tov)*36.0/sum(pb.mp) tov_36
-	    ,sum(pb.pf)*36.0/sum(pb.mp) "PF_36"
+	    ,sum(pb.pf)*36.0/sum(pb.mp) pf_36
 	    ,(sum(pb.fgm)+sum(pb.fg3m)*.5)/sum(pb.fga) efg_pct
 	    ,sum(pb.pts)/(2*(sum(pb.fga)+0.44*sum(pb.fta))) ts_pct
 	    ,sum(pb.fg3a)*1.0/sum(pb.fga) fg3_rate
