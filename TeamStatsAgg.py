@@ -131,7 +131,7 @@ def calculate_team_stats(engine):
 		,sum(tb.ftm_opp)*1.0/sum(tb.fga_opp) ff_ft_rate_opp
 		,now() last_update_dts
 	from
-		nba.team_boxscores_new tb
+		nba.team_boxscores tb
 	join
 		nba.game_summaries gs on tb.game_id=gs.game_id and gs.status='Final'
 	left join
