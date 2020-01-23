@@ -49,7 +49,7 @@ def append_boxscores(game_id,engine):
     results_head=[re.sub('\t|\n','',el.string) for el in tables[0].find_all('td')]        
     results_head_split=np.array_split(results_head,len(results_head)/5.)
 
-    for ind in [1,2]:
+    for ind in [2,1]:
         results=[el.string for el in tables[ind].find_all('td')]
 
         try:

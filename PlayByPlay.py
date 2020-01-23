@@ -19,12 +19,6 @@ import sqlalchemy as sa
 
 
 ### FUNCTIONS ###
-
-#Notes - cannot get old teams (SEA,NJN) so instead, link to box scores
-#on gameid and playerid
-#Write function for PlayerID
-#Get home score and away score, join on game summaries to get team scores
-
 def get_Team(x,ht,at):
     try:
         a=x.index(ht.lower()+'.')
@@ -43,13 +37,13 @@ def get_HomeScore(x,ht,at):
 def get_AwayScore(x,ht,at):
     return int(x.score[:x.score.index('-')-1])
 
-'''
+
 def get_TimeMinutes(x):
     if ':' in x.time:
         return int(x.time[:x.time.index(':')])+int(x.time[x.time.index(':')+1:])/60.
     else:
         return x.time
-'''    
+   
 
 def get_Quarter(x,pbp_df):
     if 'End of the 1st Quarter' in pbp_df.play.tolist():
@@ -302,7 +296,7 @@ def get_SubbedIn(x):
 
 def get_SubbedOut(x):
     try:
-        if x.Play=='JR Smith enters the game for':
+        if x.play=='JR Smith enters the game for':
             return 'Kyle Korver'
         if 'enters' in x.play:
             return x.play[x.play.index('game for ')+9:]
@@ -339,7 +333,7 @@ def append_pbp(game_id,engine):
         pbp_df['home_score']=pbp_df.apply(lambda x: get_HomeScore(x,home_team,away_team),axis=1)
         pbp_df['away_score']=pbp_df.apply(lambda x: get_AwayScore(x,home_team,away_team),axis=1)
         pbp_df['quarter']=pbp_df.apply(lambda x: get_Quarter(x,pbp_df),axis=1)
-        pbp_df['player']=pbp_df.apply(lambda x: get_Player(x),axis=1)
+        pbp_df['player_name']=pbp_df.apply(lambda x: get_Player(x),axis=1)
         pbp_df['play_type']=pbp_df.apply(lambda x: get_PlayType(x),axis=1)   
         pbp_df['points']=pbp_df.apply(lambda x: get_Points(x,pbp_df),axis=1)    
         pbp_df['assistor']=pbp_df.apply(lambda x: get_Assistor(x),axis=1)
@@ -352,7 +346,7 @@ def append_pbp(game_id,engine):
         pbp_df['team_score']=[]
         pbp_df['opp_team_score']=[]
         pbp_df['quarter']=[]
-        pbp_df['player']=[]
+        pbp_df['player_name']=[]
         pbp_df['play_type']=[]
         pbp_df['points']=[]
         pbp_df['assistor']=[]
@@ -361,10 +355,10 @@ def append_pbp(game_id,engine):
         pbp_df['subbed_in']=[]
         pbp_df['subbed_out']=[]
         
-    #pbp_df['time_minutes']=pbp_df.apply(lambda x: get_TimeMinutes(x),axis=1)
+    pbp_df['time_minutes']=pbp_df.apply(lambda x: get_TimeMinutes(x),axis=1)
     
-    column_order=['game_id','play','score','time',#'time_minutes'
-                  'team_abbr','home_score','away_score','quarter','player',
+    column_order=['game_id','play','score','time','time_minutes',
+                  'team_abbr','home_score','away_score','quarter','player_name',
                   'play_type','points','assistor','stolen_by',
                   'blocked_by','subbed_in','subbed_out']
     
@@ -377,13 +371,13 @@ def append_pbp(game_id,engine):
                                        'play': sa.types.VARCHAR(length=255),
                                        'score': sa.types.VARCHAR(length=255),
                                        'time': sa.types.VARCHAR(length=255),
-                                       #'time_minutes': sa.types.FLOAT(),
+                                       'time_minutes': sa.types.FLOAT(),
                                        'team_abbr': sa.types.VARCHAR(length=255),
                                        'home_score': sa.types.INTEGER(),
                                        
                                        'away_score': sa.types.INTEGER(),
                                        'quarter': sa.types.VARCHAR(length=255),
-                                       'player': sa.types.VARCHAR(length=255),
+                                       'player_name': sa.types.VARCHAR(length=255),
                                        'play_type': sa.types.VARCHAR(length=255),
                                        'points': sa.types.INTEGER(),
                                        

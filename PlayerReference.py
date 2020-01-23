@@ -48,7 +48,7 @@ def get_player_reference(player_ids,engine):
     
     player_reference_dict={
             'player_id':[],
-            'player':[],
+            'player_name':[],
             'first_name':[],
             'last_name':[],
             'dob':[],
@@ -162,7 +162,7 @@ def get_player_reference(player_ids,engine):
             img=None
         
         player_reference_dict['player_id'].append(player_id)
-        player_reference_dict['player'].append(display_name)
+        player_reference_dict['player_name'].append(display_name)
         player_reference_dict['first_name'].append(first_name)
         player_reference_dict['last_name'].append(last_name)
         player_reference_dict['dob'].append(dob)
@@ -201,7 +201,7 @@ def get_player_reference(player_ids,engine):
                                index=False,
                                if_exists='replace',
                                dtype={'player_id': sa.types.INTEGER(),
-                                      'player': sa.types.VARCHAR(length=255),
+                                      'player_name': sa.types.VARCHAR(length=255),
                                       'first_name': sa.types.VARCHAR(length=255),
                                       'last_name': sa.types.VARCHAR(length=255),
                                       'dob': sa.types.DATE(),
