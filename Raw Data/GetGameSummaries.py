@@ -241,6 +241,7 @@ def get_engine():
 #Get max dates of games that were scheduled but not completed
 from datetime import datetime
 from datetime import date
+from datetime import timedelta
 
 def get_dates(engine):
     date_query='''
@@ -251,17 +252,19 @@ def get_dates(engine):
     from 
         nba.game_summaries
     where
-        status='Scheduled'
+        status='Final'
 
     '''
     
 
     #Iterate through date strings to get game summaries for each date
 
-    start = pd.read_sql(date_query,engine).loc[0]['min_date']
+    #start = pd.read_sql(date_query,engine).loc[0]['min_date']
     end = pd.read_sql(date_query,engine).loc[0]['max_date']
 
-    dates=[str(d)[:4]+str(d)[5:7]+str(d)[8:10] for d in pd.date_range(start, end) if d.month < 7 or d.month >= 10]
+    #dates=[str(d)[:4]+str(d)[5:7]+str(d)[8:10] for d in pd.date_range(start, end)]# if d.month < 7 or d.month >= 10]
+    dates=[str(d)[:4]+str(d)[5:7]+str(d)[8:10] for d in pd.date_range(end,end+timedelta(days=1))][1:]# if d.month < 7 or d.month >= 10]
+    
     return dates
 
     
@@ -289,9 +292,9 @@ def drop_sched_rows(engine):
 
     delete from
         nba.game_summaries gs
-    where
-        status = 'Scheduled'
-        --and date < (now() - interval '1 day')
+    where 1=1
+        --and status = 'Scheduled'
+        and date > (now() - interval '1 day')
 
     '''
 
@@ -301,8 +304,8 @@ def drop_sched_rows(engine):
     
 def main():
     engine=get_engine()
-    dates_list=get_dates(engine)
-    drop_sched_rows(engine)
+    dates_list=get_dates(engine) 
+    #drop_sched_rows(engine)
     update_game_summaries(engine,dates_list)
     
     
@@ -314,9 +317,6 @@ if __name__ == "__main__":
 #Drop duplicate rows - if necessary
 #unique_df=pd.read_sql('select distinct * from nba.game_summaries',engine)
 #unique_df.to_sql('game_summaries',con=engine,schema='nba',index=False,if_exists='replace')
-
-
-
 
 
 
