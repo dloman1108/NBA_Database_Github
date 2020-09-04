@@ -42,7 +42,7 @@ def get_TimeMinutes(x):
 	if ':' in x.time:
 		return int(x.time[:x.time.index(':')])+int(x.time[x.time.index(':')+1:])/60.
 	else:
-		return x.time
+		return x.time/60.
    
 
 def get_Quarter(x,pbp_df):
@@ -281,7 +281,7 @@ def get_Points(x,df):
 	if 'makes' in x.play:
 		if 'free throw' in x.play:
 			return 1
-		elif 'three point' in x.play:
+		elif 'three point' in x.play or ('-foot' in x.play and int(x.play[x.play.index('-foot')-2:x.play.index('-foot')]) >= 25):
 			return 3
 		else:
 			return 2
@@ -437,7 +437,7 @@ def get_gameids(engine):
 	
 	return game_ids.game_id.tolist()
 
- 
+
 def update_play_by_play(engine,game_id_list):
 	cnt=0
 	print('Total Games: ',len(game_id_list))
