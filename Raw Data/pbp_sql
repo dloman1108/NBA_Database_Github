@@ -1,0 +1,31 @@
+
+select
+    game_id
+    ,play
+    ,score
+    ,time
+    ,case when time like '%.%' then time_minutes/60. else time_minutes end time_minutes
+    ,team_abbr
+    ,home_score
+    ,away_score
+    ,quarter
+    ,player_name
+    ,play_type
+    ,case when 
+        play like '%-foot%'
+        and points=2
+        and cast(substring(play,position('-foot' in play)-2,2) as integer) >= 25 
+        then 3 else points end points
+    ,assistor
+    ,stolen_by
+    ,blocked_by
+    ,subbed_in
+    ,subbed_out
+into
+    nba_sandbox.play_by_play
+from
+    nba.play_by_play
+
+
+
+
