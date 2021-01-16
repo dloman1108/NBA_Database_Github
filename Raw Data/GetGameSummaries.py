@@ -298,8 +298,8 @@ def drop_sched_rows(engine):
 	delete from
 		nba.game_summaries gs
 	where 1=1
-		--and status = 'Scheduled'
-		and date > (now() - interval '1 day')
+		and status = 'Scheduled'
+		and date = (now() - interval '1 day')
 
 	'''
 
@@ -310,7 +310,7 @@ def drop_sched_rows(engine):
 def main():
 	engine=get_engine()
 	dates_list=get_dates(engine) 
-	#drop_sched_rows(engine)
+	drop_sched_rows(engine)
 	update_game_summaries(engine,dates_list)
 	
 	
@@ -322,8 +322,6 @@ if __name__ == "__main__":
 #Drop duplicate rows - if necessary
 #unique_df=pd.read_sql('select distinct * from nba.game_summaries',engine)
 #unique_df.to_sql('game_summaries',con=engine,schema='nba',index=False,if_exists='replace')
-
-
 
 
 
