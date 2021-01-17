@@ -42,7 +42,7 @@ def get_TimeMinutes(x):
 	if ':' in x.time:
 		return int(x.time[:x.time.index(':')])+int(x.time[x.time.index(':')+1:])/60.
 	else:
-		return x.time/60.
+		return float(x.time)/60.
    
 
 def get_Quarter(x,pbp_df):
