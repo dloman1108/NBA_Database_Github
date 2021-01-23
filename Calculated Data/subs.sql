@@ -28,7 +28,7 @@ with subs_cte as (
         ,coalesce(pri.player_id,0) subbed_in_player_id
         ,coalesce(pro.player_id,0) subbed_out_player_id
     from
-        nba_sandbox.play_by_play pbp
+        nba.play_by_play pbp
     join
         nba.game_summaries gs on pbp.game_id=gs.game_id 
         and gs.game_id = {}
