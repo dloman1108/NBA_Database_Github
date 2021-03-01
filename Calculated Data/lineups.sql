@@ -14,7 +14,7 @@ with pbp_plus_game_time as (
                 12 * (cast(quarter as int) - 1) + (12 - time_minutes)
             end game_time
     from
-        nba_sandbox.play_by_play pbp
+        nba.play_by_play pbp
     join   
         nba.game_summaries gs 
         on pbp.game_id=gs.game_id

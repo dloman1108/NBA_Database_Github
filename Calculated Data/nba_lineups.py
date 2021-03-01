@@ -15,7 +15,7 @@ import os
 import functools
 import re
 import pickle
-
+import sklearn
 
 #Get credentials stored in sql.yaml file (saved in root directory)
 def get_engine(fp):
