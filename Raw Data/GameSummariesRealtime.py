@@ -173,7 +173,7 @@ def append_game_summary(engine):
 								  away_team_id,away_team_winner,series_summary,
 								  home_team_overall_record,home_team_home_record,home_team_away_record,
 								  away_team_overall_record,away_team_home_record,away_team_away_record,
-								  status,display_clock,clock))
+								  period,display_clock,clock))
 	
 	#Define column names
 	col_names=['game_id','status','status_detail','date','season','home_team','away_team','home_team_score','away_team_score',
