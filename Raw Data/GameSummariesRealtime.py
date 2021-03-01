@@ -141,34 +141,29 @@ def append_game_summary(engine):
 		if 'records' in event['competitions'][0]['competitors'][1]:
 			away_team_overall_record=event['competitions'][0]['competitors'][1]['records'][0]['summary']
 			away_team_home_record=event['competitions'][0]['competitors'][1]['records'][1]['summary']
-			away_team_away_record=event['competitions'][0]['competitors'][1]['records'][2]['summary']
-                else:
-		        away_team_overall_record=None
+			away_team_away_record=event['competitions'][0]['competitors'][1]['records'][2]['summary']	
+		else:
+			away_team_overall_record=None
 			away_team_home_record=None
 			away_team_away_record=None
-			
+
 		#Get game statuses - Completion and OT
-                if 'status' in event:
-		        
-                        status=event['status']['type']['description']
-                        period=event['status']['period']
-                        display_clock=event['status']['displayClock']
-                        clock=event['status']['clock']
+		if 'status' in event:
+			status=event['status']['type']['description']
+			period=event['status']['period']
+			display_clock=event['status']['displayClock']
+			clock=event['status']['clock']
+			try:
+				ot_status=event['status']['type']['altDetail']
+			except:
+				ot_status='Reg'
 
-                        try:
-                            ot_status=event['status']['type']['altDetail']
-                        except:
-                            ot_status='Reg'
-
-                else:
-
-                        status=None
-                        period=None
-                        display_clock=None
-                        clock=None
-                        ot_status=None
-			
-		
+		else:
+			status=None
+			period=None
+			display_clock=None
+			clock=None
+			ot_status=None
 		#Append game results to list   
 		scoreboard_results.append((game_id,status,ot_status,date,season,home_team,away_team,home_team_score,
 								  away_team_score,location,venue,venue_id,attendance,
@@ -178,7 +173,7 @@ def append_game_summary(engine):
 								  away_team_id,away_team_winner,series_summary,
 								  home_team_overall_record,home_team_home_record,home_team_away_record,
 								  away_team_overall_record,away_team_home_record,away_team_away_record,
-                                                                  status,display_clock,clock))
+								  status,display_clock,clock))
 	
 	#Define column names
 	col_names=['game_id','status','status_detail','date','season','home_team','away_team','home_team_score','away_team_score',
@@ -188,13 +183,13 @@ def append_game_summary(engine):
 			 'away_team_winner','playoff_series_summary',
 			 'home_team_overall_record','home_team_home_record','home_team_away_record',
 			 'away_team_overall_record','away_team_home_record','away_team_away_record',
-                         'period','display_clock','clock']  
+			 'period','display_clock','clock']
 	 
 	#Save all games for date to DF                           
 	scoreboard_results_df=pd.DataFrame(scoreboard_results,columns=col_names)
 	
 	#Append dataframe results to MySQL database
-	scoreboard_results_df.to_sql('game_summaries_nightly',
+	scoreboard_results_df.to_sql('game_summaries_realtime',
 								 con=engine,schema='nba_sandbox',
 								 index=False,
 								 if_exists='replace',
@@ -227,10 +222,10 @@ def append_game_summary(engine):
 										'away_team_overall_record': sa.types.VARCHAR(length=255),
 										'away_team_home_record': sa.types.VARCHAR(length=255),
 										'away_team_away_record': sa.types.VARCHAR(length=255),
-                                                                                'period': sa.types.INTEGER(),
-                                                                                'display_clock': sa.types.VARCHAR(length=255),
-                                                                                'clock': sa.types.INTEGER()}
-								 )   
+										'period': sa.types.INTEGER(),
+										'display_clock': sa.types.VARCHAR(length=255),
+										'clock': sa.types.INTEGER()}
+								 )
 	
 
 
