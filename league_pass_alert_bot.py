@@ -102,8 +102,11 @@ while len(active_games_df) > 0:
         else:
             lpa_string+='{} {}, {} {} with {} remaining'.format(away_team_abbr,away_team_score,home_team_abbr,home_team_score,display_clock)
 
-        t.statuses.update(
-            status=lpa_string)
+        try:
+            t.statuses.update(
+                status=lpa_string)
+        except:
+            print('ERROR TWEETING')
 
 
         game_ids.append(str(lpa_df.iloc[0].game_id))
@@ -131,6 +134,8 @@ while len(active_games_df) > 0:
 
     exec(open(fp+'/Raw Data/GameSummariesRealtime.py').read())
     active_games_df=pd.read_sql(active_games_query,engine)
+
+    print(len(active_games_df))
 
     
     
