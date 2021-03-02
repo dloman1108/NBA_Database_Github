@@ -29,7 +29,7 @@ t = Twitter(
 
 
 active_games_query='''
-select game_id from nba_sandbox.game_summaries_realtime
+select max(period) max_period from nba_sandbox.game_summaries_realtime
 where status in ('In Progress','Halftime')
 '''
 
@@ -46,9 +46,9 @@ select
 from 
     nba_sandbox.game_summaries_realtime
 WHERE 1=1
-    --and period >= 4 
+    and period >= 4 
 	and status in ('In Progress','End of Period','Halftime')
-    --and clock < 300
+    and clock < 300
     and abs(home_team_score - away_team_score) <= 5
 limit 1
 '''
@@ -122,21 +122,23 @@ while len(active_games_df) > 0:
             from 
                 nba_sandbox.game_summaries_realtime
             WHERE 1=1
-                --and period >= 4 
+                and period >= 4 
                 and status in ('In Progress')
-                --and clock < 300
-                --and abs(home_team_score - away_team_score) <= 5
-                --and game_id not in {}
+                and clock < 300
+                and abs(home_team_score - away_team_score) <= 5
+                and game_id not in {}
             limit 1
             '''.format("("+",".join(game_ids)+")")
 
-    time.sleep(60)
+    if active_games_df.iloc[0].max_period < 4:
+        time.sleep(600)
+    else:
+        time.sleep(60)
 
     exec(open(fp+'/Raw Data/GameSummariesRealtime.py').read())
     active_games_df=pd.read_sql(active_games_query,engine)
 
-    print(len(active_games_df))
-    print(len(lpa_df))
+
 
     
     
