@@ -47,7 +47,7 @@ from
     nba_sandbox.game_summaries_realtime
 WHERE 1=1
     --and period >= 4 
-	and status in ('In Progress')
+	and status in ('In Progress','End of Period','Halftime')
     --and clock < 300
     and abs(home_team_score - away_team_score) <= 5
 limit 1
@@ -136,6 +136,7 @@ while len(active_games_df) > 0:
     active_games_df=pd.read_sql(active_games_query,engine)
 
     print(len(active_games_df))
+    print(len(lpa_df))
 
     
     
