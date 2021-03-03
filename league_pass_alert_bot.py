@@ -30,7 +30,7 @@ t = Twitter(
 
 active_games_query='''
 select max(period) max_period from nba_sandbox.game_summaries_realtime
-where status in ('In Progress','Halftime')
+where status in ('In Progress','Halftime','End of Period')
 '''
 
 
