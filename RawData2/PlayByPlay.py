@@ -362,7 +362,7 @@ def append_pbp(game_id,engine,write_type):
 				  'play_type','points','assistor','stolen_by',
 				  'blocked_by','subbed_in','subbed_out']
 	
-	pbp_df[column_order].to_sql('play_by_play_nightly',
+	pbp_df[column_order].to_sql('play_by_play_realtime',
 								con=engine,
 								schema='nba_sandbox',
 								index=False,
