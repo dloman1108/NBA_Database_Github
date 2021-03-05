@@ -299,7 +299,7 @@ def drop_sched_rows(engine):
 		nba.game_summaries gs
 	where 1=1
 		and status = 'Scheduled'
-		and date = (now() - interval '1 day')
+		and date < (now() - interval '1 day')
 
 	'''
 
