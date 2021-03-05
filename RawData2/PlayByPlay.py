@@ -419,7 +419,7 @@ def get_gameids(engine):
 	select distinct
 		game_id
 	from
-		nba_sandbox.game_summaries_nightly 
+		nba_sandbox.game_summaries_realtime 
 	where
 		status in ('In Progress','End of Period','Halftime')
 	'''
