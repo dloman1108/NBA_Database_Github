@@ -306,7 +306,7 @@ def get_SubbedOut(x):
 
 
 
-def append_pbp(game_id,engine):
+def append_pbp(game_id,engine,write_type):
 	
 	url='http://www.espn.com/nba/playbyplay?gameId='+str(game_id)
 	
@@ -366,7 +366,7 @@ def append_pbp(game_id,engine):
 								con=engine,
 								schema='nba_sandbox',
 								index=False,
-								if_exists='replace',
+								if_exists=write_type,
 								dtype={'game_id': sa.types.INTEGER(),
 									   'play': sa.types.VARCHAR(length=255),
 									   'score': sa.types.VARCHAR(length=255),
@@ -421,7 +421,7 @@ def get_gameids(engine):
 	from
 		nba_sandbox.game_summaries_nightly 
 	where
-		status in ('Final','In Progress')
+		status in ('In Progress','End of Period','Halftime')
 	'''
 	
 	game_ids=pd.read_sql(game_id_query,engine)
@@ -430,11 +430,11 @@ def get_gameids(engine):
 
 
 def update_play_by_play(engine,game_id_list):
-	cnt=0
+	write_type='replace'
 	print('Total Games: ',len(game_id_list))
 	for game_id in game_id_list:
-		print(game_id)
-		append_pbp(game_id,engine)
+		append_pbp(game_id,engine,write_type)
+		write_type='append'
 			
  
 def main():
