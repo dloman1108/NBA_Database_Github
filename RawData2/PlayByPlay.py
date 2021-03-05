@@ -433,8 +433,10 @@ def update_play_by_play(engine,game_id_list):
 	write_type='replace'
 	print('Total Games: ',len(game_id_list))
 	for game_id in game_id_list:
+		print(game_id)
 		append_pbp(game_id,engine,write_type)
 		write_type='append'
+		print(write_type)
 			
  
 def main():
